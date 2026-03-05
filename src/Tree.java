@@ -1,10 +1,15 @@
 public class Tree {
     private No root;
+    private int count;
 
-    public Tree() { root=null; }
+    public Tree() { root=null; count=0; }
 
     public No getRoot() {
         return root;
+    }
+    
+    public int getCount() {
+        return count;
     }
 
     public void setRoot(No root) {
@@ -27,6 +32,7 @@ public class Tree {
                     atual = atual.esq;
                     if (atual == null) {
                         anterior.esq = novo;
+                        count++;
                         return;
                     }
                 }
@@ -34,6 +40,7 @@ public class Tree {
                     atual = atual.dir;
                     if (atual == null) {
                         anterior.dir = novo;
+                        count++;
                         return;
                     }
                 }
