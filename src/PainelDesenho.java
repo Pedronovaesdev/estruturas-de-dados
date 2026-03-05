@@ -130,6 +130,7 @@ public class PainelDesenho extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+
         if (arvore == null || arvore.getRoot() == null) return;
 
         Graphics2D g2 = (Graphics2D) g;
@@ -142,31 +143,34 @@ public class PainelDesenho extends JPanel {
 
         // O desenho sempre assume um espaço lógico fixo, o AffineTransform cuida do resto
         int profundidade = calcularProfundidade(arvore.getRoot());
-        int larguraBase = (int) Math.max(800, Math.pow(2, Math.max(0, profundidade - 5)) * 65);
 
-        desenharNo(g2, arvore.getRoot(), larguraBase / 2, 50, larguraBase / 4);
+        if (arvore.getRoot() != null) {
+
+            int raio = Math.max(15, 25 - profundidade);
+            int divisor = (int) Math.pow(2, Math.min(Math.max(profundidade, 1), 3));
+            int espacoInicial = Math.max(30, getWidth() / divisor);
+
+            desenharNo(g, arvore.getRoot(), getWidth() / 2, 50, espacoInicial, 60, raio);
+        }
     }
 
-    private void desenharNo(Graphics2D g, No no, int x, int y, int espacoX) {
-        int raio = 25;
-        int espacoY = 80;
+    private void desenharNo(Graphics g, No no, int x, int y, int espacoX, int espacoY, int raio) {
 
         if (no.esq != null) {
             g.setColor(Color.BLACK);
             g.drawLine(x, y, x - espacoX, y + espacoY);
-            desenharNo(g, no.esq, x - espacoX, y + espacoY, espacoX / 2);
+            desenharNo(g, no.esq, x - espacoX, y + espacoY, Math.max(20, espacoX / 2), espacoY, raio);
         }
 
         if (no.dir != null) {
             g.setColor(Color.BLACK);
             g.drawLine(x, y, x + espacoX, y + espacoY);
-            desenharNo(g, no.dir, x + espacoX, y + espacoY, espacoX / 2);
+            desenharNo(g, no.dir, x + espacoX, y + espacoY, Math.max(20, espacoX / 2), espacoY, raio);
         }
 
         g.setColor(new Color(135, 206, 250));
         g.fillOval(x - raio, y - raio, 2 * raio, 2 * raio);
         g.setColor(Color.BLACK);
-        g.setStroke(new BasicStroke(2));
         g.drawOval(x - raio, y - raio, 2 * raio, 2 * raio);
 
         String texto = String.valueOf(no.item);
@@ -179,5 +183,6 @@ public class PainelDesenho extends JPanel {
     private int calcularProfundidade(No no) {
         if (no == null) return 0;
         return 1 + Math.max(calcularProfundidade(no.esq), calcularProfundidade(no.dir));
+
     }
 }
