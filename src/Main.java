@@ -24,12 +24,16 @@ public class Main extends JFrame {
         campoEntrada = new JTextField(10);
         painelControles.add(campoEntrada);
 
-        JButton btnInserir = new JButton("Inserir (1)");
-        JButton btnSair = new JButton("Sair (0)");
+        JButton btnInserir = new JButton("Inserir");
+        JButton btnSair = new JButton("Sair");
+        JButton btnLimpar = new JButton("Limpar");
 
         painelControles.add(btnInserir);
         painelControles.add(btnSair);
+        painelControles.add(btnLimpar);
 
+
+        // PAINEL
         painelArvore = new PainelDesenho(arvore);
         painelArvore.setBackground(Color.WHITE);
 
@@ -57,6 +61,13 @@ public class Main extends JFrame {
                 System.exit(0);
             }
         });
+
+        btnLimpar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                limparArvore();
+            }
+        });
     }
 
     private void inserirNumero() {
@@ -65,11 +76,18 @@ public class Main extends JFrame {
             arvore.inserir(valor);
             campoEntrada.setText("");
             campoEntrada.requestFocus();
+            painelArvore.ajustarParaCaberNaTela();
             painelArvore.repaint();
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "Por favor, digite um número válido!", "Erro", JOptionPane.ERROR_MESSAGE);
             campoEntrada.setText("");
         }
+    }
+
+    private void limparArvore() {
+        arvore.vazia();
+        painelArvore.ajustarParaCaberNaTela();
+        painelArvore.repaint();
     }
 
     public static void main(String[] args) {

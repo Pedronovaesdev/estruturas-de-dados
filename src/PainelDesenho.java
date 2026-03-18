@@ -110,9 +110,16 @@ public class PainelDesenho extends JPanel {
 
     // Chame este método sempre que a árvore crescer para recalcular os limites suavemente
     public void ajustarParaCaberNaTela() {
-        if (arvore.getRoot() == null || getWidth() == 0) return;
-
+        if (getWidth() == 0) return;
+        
         usuarioControlando = false;
+
+        if (arvore.getRoot() == null) {
+            zoomAlvo = 1.0;
+            xOffsetAlvo = 0;
+            yOffsetAlvo = 0;
+            return;
+        }
 
         int profundidade = calcularProfundidade(arvore.getRoot());
         double larguraRealNecessaria = Math.max(800, Math.pow(2, Math.max(0, profundidade - 5)) * 65);
