@@ -51,9 +51,6 @@ public class Tree {
         }
     }
 
-    /**
-     * Reseta a árvore limpando todos os nós
-     */
     public void resetar() {
         root = null;
         count = 0;

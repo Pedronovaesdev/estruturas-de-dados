@@ -24,33 +24,27 @@ public class PainelDesenho extends JPanel {
         configurarMotorAnimacao();
     }
 
-    /**
-     * Atualiza a referência da árvore
-     */
     public void setArvore(Tree arvore) {
         this.arvore = arvore;
         repaint();
     }
 
     private void configurarEventosMouse() {
-        // Controle de zoom (scroll de proximidade)
         addMouseWheelListener(new MouseAdapter() {
             @Override
             public void mouseWheelMoved(MouseWheelEvent e) {
-                usuarioControlando = true; // Interrompe qualquer auto-ajuste
+                usuarioControlando = true; 
                 double zoomAnterior = zoomAtual;
 
                 if (e.getWheelRotation() < 0) {
-                    zoomAtual *= 1.1; // Aproximar
+                    zoomAtual *= 1.1; 
                 } else {
-                    zoomAtual /= 1.1; // Afastar
+                    zoomAtual /= 1.1; 
                 }
 
-                // Limita o zoom para evitar inversão ou perda da imagem
                 zoomAtual = Math.max(0.05, Math.min(zoomAtual, 10.0));
                 zoomAlvo = zoomAtual;
 
-                // Matemática para manter o zoom focado sob o cursor do mouse
                 double escalaMudanca = zoomAtual / zoomAnterior;
                 xOffsetAtual = e.getX() - (e.getX() - xOffsetAtual) * escalaMudanca;
                 yOffsetAtual = e.getY() - (e.getY() - yOffsetAtual) * escalaMudanca;
@@ -62,7 +56,6 @@ public class PainelDesenho extends JPanel {
             }
         });
 
-        // Controle de Pan (arrastar a tela)
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -91,11 +84,8 @@ public class PainelDesenho extends JPanel {
     }
 
     private void configurarMotorAnimacao() {
-        // Loop de animação a ~60 FPS para transições suaves
         animacaoTimer = new Timer(16, e -> {
             boolean precisaRepaint = false;
-
-            // Interpolação Linear (LERP) para suavizar a transição do zoom e posição
             if (Math.abs(zoomAtual - zoomAlvo) > 0.001) {
                 zoomAtual += (zoomAlvo - zoomAtual) * 0.1;
                 precisaRepaint = true;
@@ -116,7 +106,6 @@ public class PainelDesenho extends JPanel {
         animacaoTimer.start();
     }
 
-    // Chame este método sempre que a árvore crescer para recalcular os limites suavemente
     public void ajustarParaCaberNaTela() {
         if (arvore.getRoot() == null || getWidth() == 0) return;
 
@@ -129,7 +118,6 @@ public class PainelDesenho extends JPanel {
         double escalaX = getWidth() / larguraRealNecessaria;
         double escalaY = getHeight() / alturaRealNecessaria;
 
-        // Define os novos alvos. O Timer cuidará da transição suave.
         zoomAlvo = Math.min(1.0, Math.min(escalaX, escalaY));
         xOffsetAlvo = (getWidth() - (larguraRealNecessaria * zoomAlvo)) / 2.0;
         yOffsetAlvo = 20.0 * zoomAlvo;
@@ -148,8 +136,6 @@ public class PainelDesenho extends JPanel {
         at.translate(xOffsetAtual, yOffsetAtual);
         at.scale(zoomAtual, zoomAtual);
         g2.setTransform(at);
-
-        // O desenho sempre assume um espaço lógico fixo, o AffineTransform cuida do resto
         int profundidade = calcularProfundidade(arvore.getRoot());
 
         if (arvore.getRoot() != null) {
