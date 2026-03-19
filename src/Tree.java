@@ -22,7 +22,10 @@ public class Tree {
         novo.dir = null;
         novo.esq = null;
 
-        if (root == null) root = novo;
+        if (root == null) {
+            root = novo;
+            count++;
+        }
         else  { // se nao for a raiz
             No atual = root;
             No anterior;
@@ -46,8 +49,14 @@ public class Tree {
                 }
             }
         }
-
     }
 
+    /**
+     * Reseta a árvore limpando todos os nós
+     */
+    public void resetar() {
+        root = null;
+        count = 0;
+    }
 
 }

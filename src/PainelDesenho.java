@@ -24,6 +24,14 @@ public class PainelDesenho extends JPanel {
         configurarMotorAnimacao();
     }
 
+    /**
+     * Atualiza a referência da árvore
+     */
+    public void setArvore(Tree arvore) {
+        this.arvore = arvore;
+        repaint();
+    }
+
     private void configurarEventosMouse() {
         // Controle de zoom (scroll de proximidade)
         addMouseWheelListener(new MouseAdapter() {
