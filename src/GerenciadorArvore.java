@@ -22,15 +22,34 @@ public class GerenciadorArvore {
     public static Tree carregarArvore(String caminhoArquivo) {
         Tree arvore = new Tree();
         try (BufferedReader reader = new BufferedReader(new FileReader(caminhoArquivo))) {
+            StringBuilder conteudo = new StringBuilder();
             String linha;
             while ((linha = reader.readLine()) != null) {
-                linha = linha.trim();
-                if (!linha.isEmpty()) {
-                    try {
-                        long valor = Long.parseLong(linha);
-                        arvore.inserir(valor);
-                    } catch (NumberFormatException e) {
-                        System.err.println("Valor ignorado (inválido): " + linha);
+                conteudo.append(linha);
+            }
+            
+            String texto = conteudo.toString().trim();
+            if (texto.isEmpty()) {
+                return arvore;
+            }
+            
+            // Tenta ler no novo formato (Parênteses Aninhados)
+            if (texto.startsWith("(")) {
+                arvore.setRoot(parseParentesesAninhados(texto, new int[]{0}));
+            } else {
+                // Tenta ler no formato antigo (um valor por linha)
+                try (BufferedReader readerAntigo = new BufferedReader(new FileReader(caminhoArquivo))) {
+                    String linhaAntiga;
+                    while ((linhaAntiga = readerAntigo.readLine()) != null) {
+                        linhaAntiga = linhaAntiga.trim();
+                        if (!linhaAntiga.isEmpty()) {
+                            try {
+                                long valor = Long.parseLong(linhaAntiga);
+                                arvore.inserir(valor);
+                            } catch (NumberFormatException e) {
+                                System.err.println("Valor ignorado (inválido): " + linhaAntiga);
+                            }
+                        }
                     }
                 }
             }
@@ -50,24 +69,112 @@ public class GerenciadorArvore {
         }
     }
 
+    private static No parseParentesesAninhados(String texto, int[] indice) {
+        // Pula espaços
+        while (indice[0] < texto.length() && Character.isWhitespace(texto.charAt(indice[0]))) {
+            indice[0]++;
+        }
+        
+        if (indice[0] >= texto.length() || texto.charAt(indice[0]) != '(') {
+            return null;
+        }
+        
+        indice[0]++; // Pula '('
+        
+        // Pula espaços
+        while (indice[0] < texto.length() && Character.isWhitespace(texto.charAt(indice[0]))) {
+            indice[0]++;
+        }
+        
+        // Verifica se é um parêntese vazio "()"
+        if (indice[0] < texto.length() && texto.charAt(indice[0]) == ')') {
+            indice[0]++; // Pula ')'
+            return null;
+        }
+        
+        // Extrai o valor do nó
+        StringBuilder valor = new StringBuilder();
+        while (indice[0] < texto.length() && texto.charAt(indice[0]) != '(' && texto.charAt(indice[0]) != ')') {
+            char c = texto.charAt(indice[0]);
+            if (!Character.isWhitespace(c)) {
+                valor.append(c);
+            }
+            indice[0]++;
+        }
+        
+        try {
+            long v = Long.parseLong(valor.toString());
+            No no = new No();
+            no.item = v;
+            
+            // Pula espaços
+            while (indice[0] < texto.length() && Character.isWhitespace(texto.charAt(indice[0]))) {
+                indice[0]++;
+            }
+            
+            // Parse subárvore esquerda
+            no.esq = parseParentesesAninhados(texto, indice);
+            
+            // Pula espaços
+            while (indice[0] < texto.length() && Character.isWhitespace(texto.charAt(indice[0]))) {
+                indice[0]++;
+            }
+            
+            // Parse subárvore direita
+            no.dir = parseParentesesAninhados(texto, indice);
+            
+            // Pula espaços
+            while (indice[0] < texto.length() && Character.isWhitespace(texto.charAt(indice[0]))) {
+                indice[0]++;
+            }
+            
+            // Pula ')'
+            if (indice[0] < texto.length() && texto.charAt(indice[0]) == ')') {
+                indice[0]++;
+            }
+            
+            return no;
+        } catch (NumberFormatException e) {
+            System.err.println("Erro ao parsear valor: " + valor.toString());
+            return null;
+        }
+    }
+
     private static String arvoreParaString(No no) {
         if (no == null) {
-            return "";
+            return "()";
         }
         
         StringBuilder sb = new StringBuilder();
-        preOrdem(no, sb);
+        converterParentesesAninhados(no, sb);
         return sb.toString();
     }
 
-    private static void preOrdem(No no, StringBuilder sb) {
+    private static void converterParentesesAninhados(No no, StringBuilder sb) {
         if (no == null) {
+            sb.append("()");
             return;
         }
         
-        sb.append(no.item).append("\n");
-        preOrdem(no.esq, sb);
-        preOrdem(no.dir, sb);
+        sb.append("(").append(no.item);
+        
+        // Subárvore esquerda
+        if (no.esq != null) {
+            sb.append(" ");
+            converterParentesesAninhados(no.esq, sb);
+        } else {
+            sb.append(" ()");
+        }
+        
+        // Subárvore direita
+        if (no.dir != null) {
+            sb.append(" ");
+            converterParentesesAninhados(no.dir, sb);
+        } else {
+            sb.append(" ()");
+        }
+        
+        sb.append(")");
     }
 
     public static String abrirDialogoSalvar(JFrame parent) {
