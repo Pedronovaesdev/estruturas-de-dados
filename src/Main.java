@@ -8,6 +8,7 @@ public class Main extends JFrame {
     private PainelDesenho painelArvore;
     private JTextField campoEntrada;
     private JLabel lblContador;
+    private JLabel lblAltura;
 
     public Main() {
         arvore = new Tree();
@@ -29,10 +30,14 @@ public class Main extends JFrame {
         JButton btnSalvar = new JButton("Salvar");
         JButton btnCarregar = new JButton("Carregar");
         JButton btnResetar = new JButton("Resetar");
+        JButton btnCaminhos = new JButton("Caminhos");
         JButton btnSair = new JButton("Sair (0)");
 
         lblContador = new JLabel("Nós: 0");
         lblContador.setFont(new Font("Arial", Font.BOLD, 12));
+
+        lblAltura = new JLabel("Altura: -1");
+        lblAltura.setFont(new Font("Arial", Font.BOLD, 12));
 
         painelControles.add(btnInserir);
         painelControles.add(new JSeparator(JSeparator.VERTICAL));
@@ -40,7 +45,11 @@ public class Main extends JFrame {
         painelControles.add(btnCarregar);
         painelControles.add(btnResetar);
         painelControles.add(new JSeparator(JSeparator.VERTICAL));
+        painelControles.add(btnCaminhos);
+        painelControles.add(new JSeparator(JSeparator.VERTICAL));
         painelControles.add(lblContador);
+        painelControles.add(new JSeparator(JSeparator.VERTICAL));
+        painelControles.add(lblAltura);
         painelControles.add(Box.createHorizontalGlue());
         painelControles.add(btnSair);
 
@@ -82,6 +91,13 @@ public class Main extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 resetarArvore();
+            }
+        });
+
+        btnCaminhos.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                mostrarCaminhos();
             }
         });
 
@@ -150,8 +166,30 @@ public class Main extends JFrame {
         }
     }
 
+    private void mostrarCaminhos() {
+        if (arvore.getRoot() == null) {
+            JOptionPane.showMessageDialog(this, "A árvore está vazia!", "Caminhos", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        java.util.List<String> caminhos = arvore.getCaminhos();
+        StringBuilder sb = new StringBuilder("Caminhos da Raiz até as Folhas:\n\n");
+        for (String c : caminhos) {
+            sb.append(c).append("\n");
+        }
+
+        JTextArea textArea = new JTextArea(sb.toString());
+        textArea.setEditable(false);
+        textArea.setOpaque(false);
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.setPreferredSize(new Dimension(300, 200));
+
+        JOptionPane.showMessageDialog(this, scrollPane, "Caminhos da Árvore", JOptionPane.INFORMATION_MESSAGE);
+    }
+
     private void atualizarUI() {
         lblContador.setText("Nós: " + arvore.getCount());
+        lblAltura.setText("Altura: " + arvore.getAltura());
         painelArvore.repaint();
         painelArvore.ajustarParaCaberNaTela();
     }

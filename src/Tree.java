@@ -1,3 +1,6 @@
+import java.util.ArrayList;
+import java.util.List;
+
 public class Tree {
     private No root;
     private int count;
@@ -54,6 +57,39 @@ public class Tree {
     public void resetar() {
         root = null;
         count = 0;
+    }
+
+    public int getAltura() {
+        return calcularAltura(root);
+    }
+
+    private int calcularAltura(No no) {
+        if (no == null) {
+            return -1;
+        }
+        return 1 + Math.max(calcularAltura(no.esq), calcularAltura(no.dir));
+    }
+
+    public List<String> getCaminhos() {
+        List<String> caminhos = new ArrayList<>();
+        if (root != null) {
+            encontrarCaminhos(root, "", caminhos);
+        }
+        return caminhos;
+    }
+
+    private void encontrarCaminhos(No no, String caminhoAtual, List<String> caminhos) {
+        if (no == null) return;
+        
+        caminhoAtual += no.item;
+        
+        if (no.esq == null && no.dir == null) {
+            caminhos.add(caminhoAtual);
+        } else {
+            caminhoAtual += " -> ";
+            if (no.esq != null) encontrarCaminhos(no.esq, caminhoAtual, caminhos);
+            if (no.dir != null) encontrarCaminhos(no.dir, caminhoAtual, caminhos);
+        }
     }
 
 }

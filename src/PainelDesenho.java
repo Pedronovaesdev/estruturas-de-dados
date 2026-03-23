@@ -172,6 +172,29 @@ public class PainelDesenho extends JPanel {
         int textoX = x - (fm.stringWidth(texto) / 2);
         int textoY = y + (fm.getAscent() / 2) - 2;
         g.drawString(texto, textoX, textoY);
+
+        int alturaDoNo = calcularProfundidade(no) - 1;
+        String textoAltura = "h:" + alturaDoNo;
+        
+        Font fonteOriginal = g.getFont();
+        Font fontePequena = fonteOriginal.deriveFont(10f);
+        g.setFont(fontePequena);
+        FontMetrics fmPq = g.getFontMetrics();
+        
+        int alturaX = x + (raio / 2);
+        int alturaY = y - raio - 2;
+        
+        int w = fmPq.stringWidth(textoAltura);
+        int h = fmPq.getAscent();
+        
+        g.setColor(new Color(255, 255, 255, 200));
+        g.fillRect(alturaX - 1, alturaY - h + 1, w + 2, h + 2);
+        
+        g.setColor(new Color(220, 20, 60)); // Crimson read
+        g.drawString(textoAltura, alturaX, alturaY);
+        
+        g.setFont(fonteOriginal);
+        g.setColor(Color.BLACK);
     }
 
     private int calcularProfundidade(No no) {
