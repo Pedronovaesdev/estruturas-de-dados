@@ -10,7 +10,7 @@ OUT_DIR="$PROJECT_DIR/out"
 mkdir -p "$OUT_DIR"
 
 echo "Compilando projeto..."
-javac -d "$OUT_DIR" "$SRC_DIR"/*.java
+javac -encoding UTF-8 -d "$OUT_DIR" "$SRC_DIR"/*.java
 
 if [ $? -ne 0 ]; then
     echo "Erro durante a compilação!"
