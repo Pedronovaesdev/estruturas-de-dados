@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -22,16 +23,16 @@ public class Main extends JFrame {
         JPanel painelControles = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
         painelControles.setBackground(Color.LIGHT_GRAY);
 
-        painelControles.add(new JLabel("Número: "));
         campoEntrada = new JTextField(10);
         painelControles.add(campoEntrada);
 
-        JButton btnInserir = new JButton("Inserir (1)");
+        JButton btnInserir = new JButton("Inserir");
         JButton btnSalvar = new JButton("Salvar");
         JButton btnCarregar = new JButton("Carregar");
         JButton btnResetar = new JButton("Resetar");
         JButton btnCaminhos = new JButton("Caminhos");
-        JButton btnSair = new JButton("Sair (0)");
+        JButton btnPercursos = new JButton("Percursos");
+        JButton btnSair = new JButton("Sair");
 
         lblContador = new JLabel("Nós: 0");
         lblContador.setFont(new Font("Arial", Font.BOLD, 12));
@@ -44,13 +45,12 @@ public class Main extends JFrame {
         painelControles.add(btnSalvar);
         painelControles.add(btnCarregar);
         painelControles.add(btnResetar);
-        painelControles.add(new JSeparator(JSeparator.VERTICAL));
         painelControles.add(btnCaminhos);
         painelControles.add(new JSeparator(JSeparator.VERTICAL));
         painelControles.add(lblContador);
-        painelControles.add(new JSeparator(JSeparator.VERTICAL));
         painelControles.add(lblAltura);
-        painelControles.add(Box.createHorizontalGlue());
+        painelControles.add(new JSeparator(JSeparator.VERTICAL));
+        painelControles.add(btnPercursos);
         painelControles.add(btnSair);
 
         painelArvore = new PainelDesenho(arvore);
@@ -106,6 +106,54 @@ public class Main extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 System.out.println("Saindo do programa");
                 System.exit(0);
+            }
+        });
+
+        btnPercursos.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String[] opcoes = {"NLR (Pré-Ordem)", "LNR (Em Ordem)", "LRN (Pós-Ordem)"};
+                String escolha = (String) JOptionPane.showInputDialog(Main.this, 
+                    "Escolha o tipo de percurso:", 
+                    "Percursos", 
+                    JOptionPane.QUESTION_MESSAGE, 
+                    null, 
+                    opcoes, 
+                    opcoes[0]);
+
+                if (escolha != null) {
+                    String ordem = escolha.substring(0, 3); // Extrai NLR, LNR ou LRN
+                    java.util.List<Long> resultado = arvore.buscarPorPercurso(ordem);
+                    StringBuilder sb = new StringBuilder("Resultado do percurso " + ordem + ":\n\n");
+                    for (Long valor : resultado) {
+                        sb.append(valor).append("\n");
+                    }
+
+                    JTextArea textArea = new JTextArea(sb.toString());
+                    textArea.setEditable(false);
+                    textArea.setOpaque(false);
+                    JScrollPane scrollPane = new JScrollPane(textArea);
+                    scrollPane.setPreferredSize(new Dimension(300, 200));
+
+                    JButton btnCopiar = new JButton("Copiar");
+                    btnCopiar.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            StringSelection selecao = new StringSelection(textArea.getText());
+                            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selecao, null);
+                            JOptionPane.showMessageDialog(Main.this, "Resultado copiado para a area de transferencia.", "Copiado", JOptionPane.INFORMATION_MESSAGE);
+                        }
+                    });
+
+                    JPanel painelResultado = new JPanel(new BorderLayout(0, 8));
+                    painelResultado.add(scrollPane, BorderLayout.CENTER);
+
+                    JPanel painelBotao = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+                    painelBotao.add(btnCopiar);
+                    painelResultado.add(painelBotao, BorderLayout.SOUTH);
+
+                    JOptionPane.showMessageDialog(Main.this, painelResultado, "Resultado do Percurso", JOptionPane.INFORMATION_MESSAGE);
+                }
             }
         });
     }
