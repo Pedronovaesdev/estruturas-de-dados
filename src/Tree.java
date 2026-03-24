@@ -5,6 +5,10 @@ public class Tree {
     private No root;
     private int count;
 
+    private static final String NLR = "NLR";
+    private static final String LNR = "LNR";
+    private static final String LRN = "LRN";
+
     public Tree() { root=null; count=0; }
 
     public No getRoot() {
@@ -63,11 +67,53 @@ public class Tree {
         return calcularAltura(root);
     }
 
+    public List<Long> buscarPorPercurso(String ordem) {
+        List<Long> resultado = new ArrayList<>();
+
+        if (ordem == null || ordem.trim().isEmpty()) {
+            throw new IllegalArgumentException("Ordem inválida. Use NLR, LNR ou LRN.");
+        }
+
+        String ordemNormalizada = ordem.toUpperCase();
+        if (!ordemNormalizada.equals(NLR) && !ordemNormalizada.equals(LNR) && !ordemNormalizada.equals(LRN)) {
+            throw new IllegalArgumentException("Ordem inválida. Use NLR, LNR ou LRN.");
+        }
+
+        percorrer(root, ordemNormalizada, resultado);
+        return resultado;
+    }
+
     private int calcularAltura(No no) {
         if (no == null) {
             return -1;
         }
         return 1 + Math.max(calcularAltura(no.esq), calcularAltura(no.dir));
+    }
+
+    private void percorrer(No no, String ordem, List<Long> resultado) {
+        if (no == null) {
+            return;
+        }
+
+        switch (ordem) {
+            case NLR:
+                resultado.add(no.item);
+                percorrer(no.esq, ordem, resultado);
+                percorrer(no.dir, ordem, resultado);
+                break;
+            case LNR:
+                percorrer(no.esq, ordem, resultado);
+                resultado.add(no.item);
+                percorrer(no.dir, ordem, resultado);
+                break;
+            case LRN:
+                percorrer(no.esq, ordem, resultado);
+                percorrer(no.dir, ordem, resultado);
+                resultado.add(no.item);
+                break;
+            default:
+                throw new IllegalArgumentException("Ordem inválida. Use NLR, LNR ou LRN.");
+        }
     }
 
     public List<String> getCaminhos() {
