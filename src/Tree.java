@@ -70,7 +70,7 @@ public class Tree {
     public List<Long> buscarPorPercurso(String ordem) {
         List<Long> resultado = new ArrayList<>();
 
-        if (ordem == null || ordem.isBlank()) {
+        if (ordem == null || ordem.trim().isEmpty()) {
             throw new IllegalArgumentException("Ordem inválida. Use NLR, LNR ou LRN.");
         }
 
