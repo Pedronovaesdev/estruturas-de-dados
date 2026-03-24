@@ -123,6 +123,17 @@ public class Main extends JFrame {
 
                 if (escolha != null) {
                     String ordem = escolha.substring(0, 3); // Extrai NLR, LNR ou LRN
+
+                    // Trata o caso de árvore vazia antes de realizar o percurso
+                    if (arvore == null || arvore.getRoot() == null) {
+                        JOptionPane.showMessageDialog(
+                            Main.this,
+                            "Árvore vazia. Adicione elementos antes de realizar percursos.",
+                            "Árvore vazia",
+                            JOptionPane.WARNING_MESSAGE
+                        );
+                        return;
+                    }
                     java.util.List<Long> resultado = arvore.buscarPorPercurso(ordem);
                     StringBuilder sb = new StringBuilder("Resultado do percurso " + ordem + ":\n\n");
                     for (Long valor : resultado) {
