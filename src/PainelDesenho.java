@@ -15,7 +15,6 @@ public class PainelDesenho extends JPanel {
 
     private Point startPoint;
     private Timer animacaoTimer;
-    private boolean usuarioControlando = false;
 
     public PainelDesenho(Tree arvore) {
         this.arvore = arvore;
@@ -32,7 +31,6 @@ public class PainelDesenho extends JPanel {
         addMouseWheelListener(new MouseAdapter() {
             @Override
             public void mouseWheelMoved(MouseWheelEvent e) {
-                usuarioControlando = true;
                 double zoomAnterior = zoomAtual;
 
                 if (e.getWheelRotation() < 0) {
@@ -58,7 +56,6 @@ public class PainelDesenho extends JPanel {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                usuarioControlando = true;
                 startPoint = e.getPoint();
             }
         });
@@ -108,8 +105,6 @@ public class PainelDesenho extends JPanel {
     public void ajustarParaCaberNaTela() {
         if (arvore.getRoot() == null || getWidth() == 0)
             return;
-
-        usuarioControlando = false;
 
         int profundidade = calcularProfundidade(arvore.getRoot());
         double larguraRealNecessaria = Math.max(800, Math.pow(2, Math.max(0, profundidade - 5)) * 65);
@@ -173,6 +168,29 @@ public class PainelDesenho extends JPanel {
         int textoX = x - (fm.stringWidth(texto) / 2);
         int textoY = y + (fm.getAscent() / 2) - 2;
         g.drawString(texto, textoX, textoY);
+
+        int alturaDoNo = calcularProfundidade(no) - 1;
+        String textoAltura = "h:" + alturaDoNo;
+        
+        Font fonteOriginal = g.getFont();
+        Font fontePequena = fonteOriginal.deriveFont(10f);
+        g.setFont(fontePequena);
+        FontMetrics fmPq = g.getFontMetrics();
+        
+        int alturaX = x + (raio / 2);
+        int alturaY = y - raio - 2;
+        
+        int w = fmPq.stringWidth(textoAltura);
+        int h = fmPq.getAscent();
+        
+        g.setColor(new Color(255, 255, 255, 200));
+        g.fillRect(alturaX - 1, alturaY - h + 1, w + 2, h + 2);
+        
+        g.setColor(new Color(220, 20, 60)); // Crimson read
+        g.drawString(textoAltura, alturaX, alturaY);
+        
+        g.setFont(fonteOriginal);
+        g.setColor(Color.BLACK);
     }
 
     private int calcularProfundidade(No no) {

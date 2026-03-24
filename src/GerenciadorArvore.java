@@ -5,8 +5,9 @@ public class GerenciadorArvore {
 
     public static boolean salvarArvore(Tree arvore, String caminhoArquivo) {
         try (FileWriter writer = new FileWriter(caminhoArquivo)) {
-            String conteudo = arvoreParaString(arvore);
+            String conteudo = arvoreParaString(arvore.getRoot());
             writer.write(conteudo);
+            writer.write(System.lineSeparator());
             writer.flush();
             return true;
         } catch (IOException e) {
@@ -21,27 +22,45 @@ public class GerenciadorArvore {
 
     public static Tree carregarArvore(String caminhoArquivo) {
         Tree arvore = new Tree();
-        try (BufferedReader reader = new BufferedReader(new FileReader(caminhoArquivo))) {
-            String linha;
-            while ((linha = reader.readLine()) != null) {
-                linha = linha.trim();
-                if (linha.isEmpty() || linha.startsWith("===") || linha.startsWith("Nível")
-                        || linha.startsWith("Tipos") || linha.startsWith("Árvore")) {
-                    continue;
-                }
-                try {
-                    if (linha.startsWith("Valor: ")) {
-                        String valorStr = linha.split("\\|")[0].replace("Valor: ", "").trim();
-                        long valor = Long.parseLong(valorStr);
-                        arvore.inserir(valor);
-                    } else {
-                        long valor = Long.parseLong(linha);
-                        arvore.inserir(valor);
+        try {
+            String texto = lerArquivoComoString(caminhoArquivo).trim();
+            if (texto.isEmpty()) {
+                return arvore;
+            }
+
+            if (texto.startsWith("Árvore vazia")) {
+                return arvore;
+            }
+            
+            // Tenta ler no novo formato (Parênteses Aninhados)
+            if (texto.startsWith("(")) {
+                arvore.setRoot(parseParentesesAninhados(texto, new int[]{0}));
+            } else {
+                // Tenta ler no formato antigo (um valor por linha)
+                try (BufferedReader readerAntigo = new BufferedReader(new FileReader(caminhoArquivo))) {
+                    String linhaAntiga;
+                    while ((linhaAntiga = readerAntigo.readLine()) != null) {
+                        linhaAntiga = linhaAntiga.trim();
+                        if (linhaAntiga.isEmpty() || linhaAntiga.startsWith("===") || linhaAntiga.startsWith("Nível")
+                                || linhaAntiga.startsWith("Tipos") || linhaAntiga.startsWith("Árvore")) {
+                            continue;
+                        }
+
+                        String candidato = linhaAntiga;
+                        if (linhaAntiga.startsWith("Valor: ")) {
+                            candidato = linhaAntiga.split("\\|")[0].replace("Valor: ", "").trim();
+                        }
+
+                        try {
+                            long valor = Long.parseLong(candidato);
+                            arvore.inserir(valor);
+                        } catch (NumberFormatException e) {
+                            System.err.println("Valor ignorado (inválido): " + linhaAntiga);
+                        }
                     }
-                } catch (NumberFormatException e) {
-                    System.err.println("Valor ignorado (inválido): " + linha);
                 }
             }
+
             return arvore;
         } catch (FileNotFoundException e) {
             JOptionPane.showMessageDialog(null, 
@@ -58,31 +77,124 @@ public class GerenciadorArvore {
         }
     }
 
-    private static String arvoreParaString(Tree arvore) {
-        if (arvore.getRoot() == null) {
-            return "Árvore vazia\n";
-        }
-
+    private static String lerArquivoComoString(String caminhoArquivo) throws IOException {
         StringBuilder sb = new StringBuilder();
-        sb.append("=== Informações da Árvore ===\n");
-        sb.append("Nível da Árvore: ").append(arvore.getNivelArvore()).append("\n");
-        sb.append("Tipos de Árvores: ").append(arvore.getTiposArvore()).append("\n");
-        sb.append("\n=== Nós (Pré-Ordem) ===\n");
-        preOrdem(arvore.getRoot(), sb, 0);
+        try (BufferedReader reader = new BufferedReader(new FileReader(caminhoArquivo))) {
+            String linha;
+            while ((linha = reader.readLine()) != null) {
+                sb.append(linha);
+            }
+        }
         return sb.toString();
     }
 
-    private static void preOrdem(No no, StringBuilder sb, int profundidade) {
+    private static No parseParentesesAninhados(String texto, int[] indice) {
+        // Pula espaços
+        while (indice[0] < texto.length() && Character.isWhitespace(texto.charAt(indice[0]))) {
+            indice[0]++;
+        }
+        
+        if (indice[0] >= texto.length() || texto.charAt(indice[0]) != '(') {
+            return null;
+        }
+        
+        indice[0]++; // Pula '('
+        
+        // Pula espaços
+        while (indice[0] < texto.length() && Character.isWhitespace(texto.charAt(indice[0]))) {
+            indice[0]++;
+        }
+        
+        // Verifica se é um parêntese vazio "()"
+        if (indice[0] < texto.length() && texto.charAt(indice[0]) == ')') {
+            indice[0]++; // Pula ')'
+            return null;
+        }
+        
+        // Extrai o valor do nó
+        StringBuilder valor = new StringBuilder();
+        while (indice[0] < texto.length() && texto.charAt(indice[0]) != '(' && texto.charAt(indice[0]) != ')') {
+            char c = texto.charAt(indice[0]);
+            if (!Character.isWhitespace(c)) {
+                valor.append(c);
+            }
+            indice[0]++;
+        }
+        
+        try {
+            long v = Long.parseLong(valor.toString());
+            No no = new No();
+            no.item = v;
+            
+            // Pula espaços
+            while (indice[0] < texto.length() && Character.isWhitespace(texto.charAt(indice[0]))) {
+                indice[0]++;
+            }
+            
+            // Parse subárvore esquerda
+            no.esq = parseParentesesAninhados(texto, indice);
+            
+            // Pula espaços
+            while (indice[0] < texto.length() && Character.isWhitespace(texto.charAt(indice[0]))) {
+                indice[0]++;
+            }
+            
+            // Parse subárvore direita
+            no.dir = parseParentesesAninhados(texto, indice);
+            
+            // Pula espaços
+            while (indice[0] < texto.length() && Character.isWhitespace(texto.charAt(indice[0]))) {
+                indice[0]++;
+            }
+            
+            // Pula ')'
+            if (indice[0] < texto.length() && texto.charAt(indice[0]) == ')') {
+                indice[0]++;
+            }
+            
+            return no;
+        } catch (NumberFormatException e) {
+            System.err.println("Erro ao parsear valor: " + valor.toString());
+            return null;
+        }
+    }
+
+    private static String arvoreParaString(No no) {
         if (no == null) {
-            return;
+            return "()";
         }
 
-        sb.append("Valor: ").append(no.item);
-        sb.append(" | Nível do Nó: ").append(profundidade);
-        sb.append(" | Profundidade do Nó: ").append(profundidade);
-        sb.append("\n");
-        preOrdem(no.esq, sb, profundidade + 1);
-        preOrdem(no.dir, sb, profundidade + 1);
+        StringBuilder sb = new StringBuilder();
+
+        converterParentesesAninhados(no, sb);
+        return sb.toString();
+    }
+
+    private static void converterParentesesAninhados(No no, StringBuilder sb) {
+        if (no == null) {
+            sb.append("()");
+            return;
+        }
+                
+        sb.append("(").append(no.item);
+        
+        // Subárvore esquerda
+        if (no.esq != null) {
+            sb.append(" ");
+            converterParentesesAninhados(no.esq, sb);
+        } else {
+            sb.append(" ()");
+        }
+        
+        // Subárvore direita
+        if (no.dir != null) {
+            sb.append(" ");
+            converterParentesesAninhados(no.dir, sb);
+        } else {
+            sb.append(" ()");
+        }
+        
+        sb.append(")");
     }
 
     public static String abrirDialogoSalvar(JFrame parent) {
