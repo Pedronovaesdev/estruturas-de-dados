@@ -152,7 +152,7 @@ public class Main extends JFrame {
                         public void actionPerformed(ActionEvent e) {
                             StringSelection selecao = new StringSelection(textArea.getText());
                             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selecao, null);
-                            JOptionPane.showMessageDialog(Main.this, "Resultado copiado para a area de transferencia.", "Copiado", JOptionPane.INFORMATION_MESSAGE);
+                            JOptionPane.showMessageDialog(Main.this, "Resultado copiado para a área de transferência.", "Copiado", JOptionPane.INFORMATION_MESSAGE);
                         }
                     });
 
