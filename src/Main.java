@@ -10,7 +10,7 @@ public class Main extends JFrame {
     private JTextField campoEntrada;
     private JLabel lblContador;
     private JLabel lblAltura;
-    private JLabel lblTipoArvore;
+    private JButton btnTipoArvore;
 
     public Main() {
         arvore = new Tree();
@@ -41,8 +41,12 @@ public class Main extends JFrame {
         lblAltura = new JLabel("Altura: -1");
         lblAltura.setFont(new Font("Arial", Font.BOLD, 12));
 
-        lblTipoArvore = new JLabel("Tipo: Vazia");
-        lblTipoArvore.setFont(new Font("Arial", Font.BOLD, 12));
+        btnTipoArvore = new JButton("Tipo: Vazia");
+        btnTipoArvore.setFont(new Font("Arial", Font.BOLD, 12));
+        btnTipoArvore.setFocusable(false);
+        btnTipoArvore.addActionListener(e -> {
+            JOptionPane.showMessageDialog(this, arvore.getTiposArvore(), "Tipo da Árvore", JOptionPane.INFORMATION_MESSAGE);
+        });
 
         painelControles.add(btnInserir);
         painelControles.add(new JSeparator(JSeparator.VERTICAL));
@@ -53,7 +57,7 @@ public class Main extends JFrame {
         painelControles.add(new JSeparator(JSeparator.VERTICAL));
         painelControles.add(lblContador);
         painelControles.add(lblAltura);
-        painelControles.add(lblTipoArvore);
+        painelControles.add(btnTipoArvore);
         painelControles.add(new JSeparator(JSeparator.VERTICAL));
         painelControles.add(btnPercursos);
         painelControles.add(btnSair);
@@ -260,7 +264,7 @@ public class Main extends JFrame {
     private void atualizarUI() {
         lblContador.setText("Nós: " + arvore.getCount());
         lblAltura.setText("Altura: " + arvore.getAltura());
-        lblTipoArvore.setText("Tipo: " + arvore.getTiposArvore());
+        btnTipoArvore.setText("Tipo: " + arvore.getTiposArvore());
         painelArvore.repaint();
         painelArvore.ajustarParaCaberNaTela();
     }
