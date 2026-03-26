@@ -107,6 +107,7 @@ public class Tree {
     public boolean isCheia(No no) {
         if (no == null) return true;
         if ((no.esq == null && no.dir != null) || (no.esq != null && no.dir == null)) return false;
+        if (no.esq == null && no.dir == null) return true;
         return isCheia(no.esq) && isCheia(no.dir);
     }
 
@@ -118,12 +119,29 @@ public class Tree {
 
     public String getTiposArvore() {
         if (root == null) return "Vazia";
-        StringBuilder tipos = new StringBuilder("Árvore Binária de Busca");
-        if (isBalanceada(root)) tipos.append(", Balanceada");
-        if (isCompleta()) tipos.append(", Completa");
-        if (isCheia(root)) tipos.append(", Cheia");
-        if (isDegenerada(root)) tipos.append(", Degenerada");
-        return tipos.toString();
+        String tipo = new String();
+        if (isBalanceada(root)) tipo = "Balanceada";
+        if (isCompleta()) tipo = "Completa";
+        if (isCheiaEstritamente()) tipo = "Cheia";
+        if (isDegenerada(root)) tipo = "Degenerada";
+
+        return tipo;
+    }
+
+    // Uma árvore cheia (estritamente binária) é aquela em que todos os nós internos têm exatamente 2 filhos
+    // e todos os nós folhas estão no mesmo nível (altura)
+    public boolean isCheiaEstritamente() {
+        int altura = getAltura();
+        return isCheiaEstritamenteHelper(root, 0, altura);
+    }
+
+    private boolean isCheiaEstritamenteHelper(No no, int nivel, int altura) {
+        if (no == null) return true;
+        if (no.esq == null && no.dir == null) {
+            return nivel == altura;
+        }
+        if (no.esq == null || no.dir == null) return false;
+        return isCheiaEstritamenteHelper(no.esq, nivel + 1, altura) && isCheiaEstritamenteHelper(no.dir, nivel + 1, altura);
     }
 
     public int getAltura() {
