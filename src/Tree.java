@@ -130,6 +130,22 @@ public class Tree {
         return altura(root);
     }
 
+    public int getNivelNo(No alvo) {
+        return getNivelNoHelper(root, alvo, 0);
+    }
+
+    public int getProfundidadeNo(No alvo) {
+        return getNivelNo(alvo);
+    }
+
+    private int getNivelNoHelper(No atual, No alvo, int nivel) {
+        if (atual == null) return -1;
+        if (atual == alvo) return nivel;
+        int esq = getNivelNoHelper(atual.esq, alvo, nivel + 1);
+        if (esq != -1) return esq;
+        return getNivelNoHelper(atual.dir, alvo, nivel + 1);
+    }
+
     public List<Long> buscarPorPercurso(String ordem) {
         List<Long> resultado = new ArrayList<>();
 

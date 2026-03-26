@@ -140,22 +140,22 @@ public class PainelDesenho extends JPanel {
             int divisor = (int) Math.pow(2, Math.min(Math.max(profundidade, 1), 3));
             int espacoInicial = Math.max(30, getWidth() / divisor);
 
-            desenharNo(g, arvore.getRoot(), getWidth() / 2, 50, espacoInicial, 60, raio);
+            desenharNo(g, arvore.getRoot(), getWidth() / 2, 50, espacoInicial, 60, raio, 0);
         }
     }
 
-    private void desenharNo(Graphics g, No no, int x, int y, int espacoX, int espacoY, int raio) {
+    private void desenharNo(Graphics g, No no, int x, int y, int espacoX, int espacoY, int raio, int nivel) {
 
         if (no.esq != null) {
             g.setColor(Color.BLACK);
             g.drawLine(x, y, x - espacoX, y + espacoY);
-            desenharNo(g, no.esq, x - espacoX, y + espacoY, Math.max(20, espacoX / 2), espacoY, raio);
+            desenharNo(g, no.esq, x - espacoX, y + espacoY, Math.max(20, espacoX / 2), espacoY, raio, nivel + 1);
         }
 
         if (no.dir != null) {
             g.setColor(Color.BLACK);
             g.drawLine(x, y, x + espacoX, y + espacoY);
-            desenharNo(g, no.dir, x + espacoX, y + espacoY, Math.max(20, espacoX / 2), espacoY, raio);
+            desenharNo(g, no.dir, x + espacoX, y + espacoY, Math.max(20, espacoX / 2), espacoY, raio, nivel + 1);
         }
 
         g.setColor(new Color(135, 206, 250));
@@ -169,26 +169,34 @@ public class PainelDesenho extends JPanel {
         int textoY = y + (fm.getAscent() / 2) - 2;
         g.drawString(texto, textoX, textoY);
 
-        int alturaDoNo = calcularProfundidade(no) - 1;
-        String textoAltura = "h:" + alturaDoNo;
-        
         Font fonteOriginal = g.getFont();
         Font fontePequena = fonteOriginal.deriveFont(10f);
         g.setFont(fontePequena);
         FontMetrics fmPq = g.getFontMetrics();
-        
+
+        // --- Altura do nó (acima, à direita) ---
+        int alturaDoNo = calcularProfundidade(no) - 1;
+        String textoAltura = "h:" + alturaDoNo;
         int alturaX = x + (raio / 2);
         int alturaY = y - raio - 2;
-        
-        int w = fmPq.stringWidth(textoAltura);
-        int h = fmPq.getAscent();
-        
+        int wA = fmPq.stringWidth(textoAltura);
+        int hA = fmPq.getAscent();
         g.setColor(new Color(255, 255, 255, 200));
-        g.fillRect(alturaX - 1, alturaY - h + 1, w + 2, h + 2);
-        
-        g.setColor(new Color(220, 20, 60)); // Crimson read
+        g.fillRect(alturaX - 1, alturaY - hA + 1, wA + 2, hA + 2);
+        g.setColor(new Color(220, 20, 60)); // Crimson
         g.drawString(textoAltura, alturaX, alturaY);
-        
+
+        // --- Nível / Profundidade do nó (abaixo, à esquerda) ---
+        String textoNivel = "n:" + nivel;
+        int nivelX = x - raio - fmPq.stringWidth(textoNivel) - 1;
+        int nivelY = y + raio + fmPq.getAscent();
+        int wN = fmPq.stringWidth(textoNivel);
+        int hN = fmPq.getAscent();
+        g.setColor(new Color(255, 255, 255, 200));
+        g.fillRect(nivelX - 1, nivelY - hN + 1, wN + 2, hN + 2);
+        g.setColor(new Color(30, 100, 200)); // Azul
+        g.drawString(textoNivel, nivelX, nivelY);
+
         g.setFont(fonteOriginal);
         g.setColor(Color.BLACK);
     }
