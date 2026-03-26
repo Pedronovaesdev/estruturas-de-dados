@@ -7,6 +7,7 @@ public class GerenciadorArvore {
         try (FileWriter writer = new FileWriter(caminhoArquivo)) {
             String conteudo = arvoreParaString(arvore.getRoot());
             writer.write(conteudo);
+            writer.write(System.lineSeparator());
             writer.flush();
             return true;
         } catch (IOException e) {
@@ -21,15 +22,13 @@ public class GerenciadorArvore {
 
     public static Tree carregarArvore(String caminhoArquivo) {
         Tree arvore = new Tree();
-        try (BufferedReader reader = new BufferedReader(new FileReader(caminhoArquivo))) {
-            StringBuilder conteudo = new StringBuilder();
-            String linha;
-            while ((linha = reader.readLine()) != null) {
-                conteudo.append(linha);
-            }
-            
-            String texto = conteudo.toString().trim();
+        try {
+            String texto = lerArquivoComoString(caminhoArquivo).trim();
             if (texto.isEmpty()) {
+                return arvore;
+            }
+
+            if (texto.startsWith("Árvore vazia")) {
                 return arvore;
             }
             
@@ -42,17 +41,26 @@ public class GerenciadorArvore {
                     String linhaAntiga;
                     while ((linhaAntiga = readerAntigo.readLine()) != null) {
                         linhaAntiga = linhaAntiga.trim();
-                        if (!linhaAntiga.isEmpty()) {
-                            try {
-                                long valor = Long.parseLong(linhaAntiga);
-                                arvore.inserir(valor);
-                            } catch (NumberFormatException e) {
-                                System.err.println("Valor ignorado (inválido): " + linhaAntiga);
-                            }
+                        if (linhaAntiga.isEmpty() || linhaAntiga.startsWith("===") || linhaAntiga.startsWith("Nível")
+                                || linhaAntiga.startsWith("Tipos") || linhaAntiga.startsWith("Árvore")) {
+                            continue;
+                        }
+
+                        String candidato = linhaAntiga;
+                        if (linhaAntiga.startsWith("Valor: ")) {
+                            candidato = linhaAntiga.split("\\|")[0].replace("Valor: ", "").trim();
+                        }
+
+                        try {
+                            long valor = Long.parseLong(candidato);
+                            arvore.inserir(valor);
+                        } catch (NumberFormatException e) {
+                            System.err.println("Valor ignorado (inválido): " + linhaAntiga);
                         }
                     }
                 }
             }
+
             return arvore;
         } catch (FileNotFoundException e) {
             JOptionPane.showMessageDialog(null, 
@@ -67,6 +75,17 @@ public class GerenciadorArvore {
                 JOptionPane.ERROR_MESSAGE);
             return null;
         }
+    }
+
+    private static String lerArquivoComoString(String caminhoArquivo) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(caminhoArquivo))) {
+            String linha;
+            while ((linha = reader.readLine()) != null) {
+                sb.append(linha);
+            }
+        }
+        return sb.toString();
     }
 
     private static No parseParentesesAninhados(String texto, int[] indice) {
@@ -144,8 +163,9 @@ public class GerenciadorArvore {
         if (no == null) {
             return "()";
         }
-        
+
         StringBuilder sb = new StringBuilder();
+
         converterParentesesAninhados(no, sb);
         return sb.toString();
     }
@@ -155,7 +175,7 @@ public class GerenciadorArvore {
             sb.append("()");
             return;
         }
-        
+                
         sb.append("(").append(no.item);
         
         // Subárvore esquerda

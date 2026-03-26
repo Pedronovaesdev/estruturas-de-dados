@@ -6,7 +6,6 @@ import java.awt.geom.AffineTransform;
 public class PainelDesenho extends JPanel {
     private Tree arvore;
 
-    // Variáveis de estado da Câmera (Viewport)
     private double zoomAtual = 1.0;
     private double zoomAlvo = 1.0;
     private double xOffsetAtual = 0;
@@ -16,7 +15,6 @@ public class PainelDesenho extends JPanel {
 
     private Point startPoint;
     private Timer animacaoTimer;
-    private boolean usuarioControlando = false;
 
     public PainelDesenho(Tree arvore) {
         this.arvore = arvore;
@@ -33,13 +31,12 @@ public class PainelDesenho extends JPanel {
         addMouseWheelListener(new MouseAdapter() {
             @Override
             public void mouseWheelMoved(MouseWheelEvent e) {
-                usuarioControlando = true; 
                 double zoomAnterior = zoomAtual;
 
                 if (e.getWheelRotation() < 0) {
-                    zoomAtual *= 1.1; 
+                    zoomAtual *= 1.1;
                 } else {
-                    zoomAtual /= 1.1; 
+                    zoomAtual /= 1.1;
                 }
 
                 zoomAtual = Math.max(0.05, Math.min(zoomAtual, 10.0));
@@ -59,7 +56,6 @@ public class PainelDesenho extends JPanel {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                usuarioControlando = true;
                 startPoint = e.getPoint();
             }
         });
@@ -107,9 +103,8 @@ public class PainelDesenho extends JPanel {
     }
 
     public void ajustarParaCaberNaTela() {
-        if (arvore.getRoot() == null || getWidth() == 0) return;
-
-        usuarioControlando = false;
+        if (arvore.getRoot() == null || getWidth() == 0)
+            return;
 
         int profundidade = calcularProfundidade(arvore.getRoot());
         double larguraRealNecessaria = Math.max(800, Math.pow(2, Math.max(0, profundidade - 5)) * 65);
@@ -127,7 +122,8 @@ public class PainelDesenho extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        if (arvore == null || arvore.getRoot() == null) return;
+        if (arvore == null || arvore.getRoot() == null)
+            return;
 
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -198,7 +194,8 @@ public class PainelDesenho extends JPanel {
     }
 
     private int calcularProfundidade(No no) {
-        if (no == null) return 0;
+        if (no == null)
+            return 0;
         return 1 + Math.max(calcularProfundidade(no.esq), calcularProfundidade(no.dir));
 
     }

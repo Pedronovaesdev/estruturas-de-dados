@@ -177,21 +177,24 @@ public class Main extends JFrame {
             campoEntrada.requestFocus();
             atualizarUI();
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Por favor, digite um número válido!", "Erro", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Por favor, digite um número válido!", "Erro",
+                    JOptionPane.ERROR_MESSAGE);
             campoEntrada.setText("");
         }
     }
 
     private void salvarArvore() {
         if (arvore.getRoot() == null) {
-            JOptionPane.showMessageDialog(this, "A árvore está vazia! Não há nada para salvar.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "A árvore está vazia! Não há nada para salvar.", "Aviso",
+                    JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         String caminho = GerenciadorArvore.abrirDialogoSalvar(this);
         if (caminho != null) {
             if (GerenciadorArvore.salvarArvore(arvore, caminho)) {
-                JOptionPane.showMessageDialog(this, "Árvore salva com sucesso em:\n" + caminho, "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Árvore salva com sucesso em:\n" + caminho, "Sucesso",
+                        JOptionPane.INFORMATION_MESSAGE);
             }
         }
     }
@@ -205,23 +208,26 @@ public class Main extends JFrame {
                 painelArvore.setArvore(arvore);
                 painelArvore.ajustarParaCaberNaTela();
                 atualizarUI();
-                JOptionPane.showMessageDialog(this, "Árvore carregada com sucesso!\nNós carregados: " + arvore.getCount(), "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this,
+                        "Árvore carregada com sucesso!\nNós carregados: " + arvore.getCount(), "Sucesso",
+                        JOptionPane.INFORMATION_MESSAGE);
             }
         }
     }
 
     private void resetarArvore() {
-        int resposta = JOptionPane.showConfirmDialog(this, 
-            "Deseja realmente resetar a árvore?\nIsso limpará todos os nós!", 
-            "Confirmar Reset", 
-            JOptionPane.YES_NO_OPTION, 
-            JOptionPane.WARNING_MESSAGE);
+        int resposta = JOptionPane.showConfirmDialog(this,
+                "Deseja realmente resetar a árvore?\nIsso limpará todos os nós!",
+                "Confirmar Reset",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
 
         if (resposta == JOptionPane.YES_OPTION) {
             arvore.resetar();
             painelArvore.ajustarParaCaberNaTela();
             atualizarUI();
-            JOptionPane.showMessageDialog(this, "Árvore resetada com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Árvore resetada com sucesso!", "Sucesso",
+                    JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
