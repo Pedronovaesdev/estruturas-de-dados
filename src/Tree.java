@@ -119,12 +119,13 @@ public class Tree {
 
     public String getTiposArvore() {
         if (root == null) return "Vazia";
-        StringBuilder tipos = new StringBuilder("Árvore Binária de Busca");
-        if (isBalanceada(root)) tipos.append(", Balanceada");
-        if (isCompleta()) tipos.append(", Completa");
-        if (isCheiaEstritamente()) tipos.append(", Cheia");
-        if (isDegenerada(root)) tipos.append(", Degenerada");
-        return tipos.toString();
+        String tipo = new String();
+        if (isBalanceada(root)) tipo = "Balanceada";
+        if (isCompleta()) tipo = "Completa";
+        if (isCheiaEstritamente()) tipo = "Cheia";
+        if (isDegenerada(root)) tipo = "Degenerada";
+
+        return tipo;
     }
 
     // Uma árvore cheia (estritamente binária) é aquela em que todos os nós internos têm exatamente 2 filhos
