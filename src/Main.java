@@ -10,6 +10,7 @@ public class Main extends JFrame {
     private JTextField campoEntrada;
     private JLabel lblContador;
     private JLabel lblAltura;
+    private JLabel lblTipoArvore;
 
     public Main() {
         arvore = new Tree();
@@ -40,6 +41,9 @@ public class Main extends JFrame {
         lblAltura = new JLabel("Altura: -1");
         lblAltura.setFont(new Font("Arial", Font.BOLD, 12));
 
+        lblTipoArvore = new JLabel("Tipo: Vazia");
+        lblTipoArvore.setFont(new Font("Arial", Font.BOLD, 12));
+
         painelControles.add(btnInserir);
         painelControles.add(new JSeparator(JSeparator.VERTICAL));
         painelControles.add(btnSalvar);
@@ -49,6 +53,7 @@ public class Main extends JFrame {
         painelControles.add(new JSeparator(JSeparator.VERTICAL));
         painelControles.add(lblContador);
         painelControles.add(lblAltura);
+        painelControles.add(lblTipoArvore);
         painelControles.add(new JSeparator(JSeparator.VERTICAL));
         painelControles.add(btnPercursos);
         painelControles.add(btnSair);
@@ -255,6 +260,7 @@ public class Main extends JFrame {
     private void atualizarUI() {
         lblContador.setText("Nós: " + arvore.getCount());
         lblAltura.setText("Altura: " + arvore.getAltura());
+        lblTipoArvore.setText("Tipo: " + arvore.getTiposArvore());
         painelArvore.repaint();
         painelArvore.ajustarParaCaberNaTela();
     }
