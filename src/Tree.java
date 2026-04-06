@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class Tree {
@@ -83,8 +84,9 @@ public class Tree {
 
     public boolean isCompleta() {
         if (root == null) return true;
-        java.util.Queue<No> fila = new java.util.LinkedList<>();
+        LinkedList<No> fila = new LinkedList<>();
         fila.add(root);
+
         boolean encontrouNulo = false;
         while (!fila.isEmpty()) {
             No atual = fila.poll();
@@ -94,6 +96,7 @@ public class Tree {
             } else {
                 encontrouNulo = true;
             }
+
             if (atual.dir != null) {
                 if (encontrouNulo) return false;
                 fila.add(atual.dir);
@@ -120,6 +123,7 @@ public class Tree {
     public String getTiposArvore() {
         if (root == null) return "Vazia";
         String tipo = new String();
+        tipo = "Busca";
         if (isBalanceada(root)) tipo = "Balanceada";
         if (isCompleta()) tipo = "Completa";
         if (isCheiaEstritamente()) tipo = "Cheia";
