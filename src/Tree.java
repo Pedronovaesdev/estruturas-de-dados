@@ -10,12 +10,15 @@ public class Tree {
     private static final String LNR = "LNR";
     private static final String LRN = "LRN";
 
-    public Tree() { root=null; count=0; }
+    public Tree() {
+        root = null;
+        count = 0;
+    }
 
     public No getRoot() {
         return root;
     }
-    
+
     public int getCount() {
         return count;
     }
@@ -34,21 +37,19 @@ public class Tree {
         if (root == null) {
             root = novo;
             count++;
-        }
-        else  { // se nao for a raiz
+        } else { // se nao for a raiz
             No atual = root;
             No anterior;
-            while(true) {
+            while (true) {
                 anterior = atual;
-                if (v <= atual.item) {
+                if (v < atual.item) {
                     atual = atual.esq;
                     if (atual == null) {
                         anterior.esq = novo;
                         count++;
                         return;
                     }
-                }
-                else {
+                } else {
                     atual = atual.dir;
                     if (atual == null) {
                         anterior.dir = novo;
@@ -65,8 +66,26 @@ public class Tree {
         count = 0;
     }
 
+    public void inverter() {
+        inverterRecursivo(root);
+    }
+
+    private void inverterRecursivo(No no) {
+        if (no == null) {
+            return;
+        }
+
+        No temporario = no.esq;
+        no.esq = no.dir;
+        no.dir = temporario;
+
+        inverterRecursivo(no.esq);
+        inverterRecursivo(no.dir);
+    }
+
     public int altura(No no) {
-        if (no == null) return -1;
+        if (no == null)
+            return -1;
         int altEsq = altura(no.esq);
         int altDir = altura(no.dir);
         return 1 + Math.max(altEsq, altDir);
@@ -77,13 +96,15 @@ public class Tree {
     }
 
     public boolean isBalanceada(No no) {
-        if (no == null) return true;
+        if (no == null)
+            return true;
         int diff = Math.abs(altura(no.esq) - altura(no.dir));
         return diff <= 1 && isBalanceada(no.esq) && isBalanceada(no.dir);
     }
 
     public boolean isCompleta() {
-        if (root == null) return true;
+        if (root == null)
+            return true;
         LinkedList<No> fila = new LinkedList<>();
         fila.add(root);
 
@@ -91,14 +112,16 @@ public class Tree {
         while (!fila.isEmpty()) {
             No atual = fila.poll();
             if (atual.esq != null) {
-                if (encontrouNulo) return false;
+                if (encontrouNulo)
+                    return false;
                 fila.add(atual.esq);
             } else {
                 encontrouNulo = true;
             }
 
             if (atual.dir != null) {
-                if (encontrouNulo) return false;
+                if (encontrouNulo)
+                    return false;
                 fila.add(atual.dir);
             } else {
                 encontrouNulo = true;
@@ -108,31 +131,42 @@ public class Tree {
     }
 
     public boolean isCheia(No no) {
-        if (no == null) return true;
-        if ((no.esq == null && no.dir != null) || (no.esq != null && no.dir == null)) return false;
-        if (no.esq == null && no.dir == null) return true;
+        if (no == null)
+            return true;
+        if ((no.esq == null && no.dir != null) || (no.esq != null && no.dir == null))
+            return false;
+        if (no.esq == null && no.dir == null)
+            return true;
         return isCheia(no.esq) && isCheia(no.dir);
     }
 
     public boolean isDegenerada(No no) {
-        if (no == null) return true;
-        if (no.esq != null && no.dir != null) return false;
+        if (no == null)
+            return true;
+        if (no.esq != null && no.dir != null)
+            return false;
         return isDegenerada(no.esq) && isDegenerada(no.dir);
     }
 
     public String getTiposArvore() {
-        if (root == null) return "Vazia";
+        if (root == null)
+            return "Vazia";
         String tipo = new String();
         tipo = "Busca";
-        if (isBalanceada(root)) tipo = "Balanceada";
-        if (isCompleta()) tipo = "Completa";
-        if (isCheiaEstritamente()) tipo = "Cheia";
-        if (isDegenerada(root)) tipo = "Degenerada";
+        if (isBalanceada(root))
+            tipo = "Balanceada";
+        if (isCompleta())
+            tipo = "Completa";
+        if (isCheiaEstritamente())
+            tipo = "Cheia";
+        if (isDegenerada(root))
+            tipo = "Degenerada";
 
         return tipo;
     }
 
-    // Uma árvore cheia (estritamente binária) é aquela em que todos os nós internos têm exatamente 2 filhos
+    // Uma árvore cheia (estritamente binária) é aquela em que todos os nós internos
+    // têm exatamente 2 filhos
     // e todos os nós folhas estão no mesmo nível (altura)
     public boolean isCheiaEstritamente() {
         int altura = getAltura();
@@ -140,12 +174,15 @@ public class Tree {
     }
 
     private boolean isCheiaEstritamenteHelper(No no, int nivel, int altura) {
-        if (no == null) return true;
+        if (no == null)
+            return true;
         if (no.esq == null && no.dir == null) {
             return nivel == altura;
         }
-        if (no.esq == null || no.dir == null) return false;
-        return isCheiaEstritamenteHelper(no.esq, nivel + 1, altura) && isCheiaEstritamenteHelper(no.dir, nivel + 1, altura);
+        if (no.esq == null || no.dir == null)
+            return false;
+        return isCheiaEstritamenteHelper(no.esq, nivel + 1, altura)
+                && isCheiaEstritamenteHelper(no.dir, nivel + 1, altura);
     }
 
     public int getAltura() {
@@ -161,10 +198,13 @@ public class Tree {
     }
 
     private int getNivelNoHelper(No atual, No alvo, int nivel) {
-        if (atual == null) return -1;
-        if (atual == alvo) return nivel;
+        if (atual == null)
+            return -1;
+        if (atual == alvo)
+            return nivel;
         int esq = getNivelNoHelper(atual.esq, alvo, nivel + 1);
-        if (esq != -1) return esq;
+        if (esq != -1)
+            return esq;
         return getNivelNoHelper(atual.dir, alvo, nivel + 1);
     }
 
@@ -226,16 +266,19 @@ public class Tree {
     }
 
     private void encontrarCaminhos(No no, String caminhoAtual, List<String> caminhos) {
-        if (no == null) return;
-        
+        if (no == null)
+            return;
+
         caminhoAtual += no.item;
-        
+
         if (no.esq == null && no.dir == null) {
             caminhos.add(caminhoAtual);
         } else {
             caminhoAtual += " -> ";
-            if (no.esq != null) encontrarCaminhos(no.esq, caminhoAtual, caminhos);
-            if (no.dir != null) encontrarCaminhos(no.dir, caminhoAtual, caminhos);
+            if (no.esq != null)
+                encontrarCaminhos(no.esq, caminhoAtual, caminhos);
+            if (no.dir != null)
+                encontrarCaminhos(no.dir, caminhoAtual, caminhos);
         }
     }
 

@@ -31,6 +31,7 @@ public class Main extends JFrame {
         JButton btnSalvar = new JButton("Salvar");
         JButton btnCarregar = new JButton("Carregar");
         JButton btnResetar = new JButton("Resetar");
+        JButton btnInverter = new JButton("Inverter");
         JButton btnCaminhos = new JButton("Caminhos");
         JButton btnPercursos = new JButton("Percursos");
         JButton btnSair = new JButton("Sair");
@@ -53,6 +54,7 @@ public class Main extends JFrame {
         painelControles.add(btnSalvar);
         painelControles.add(btnCarregar);
         painelControles.add(btnResetar);
+        painelControles.add(btnInverter);
         painelControles.add(btnCaminhos);
         painelControles.add(new JSeparator(JSeparator.VERTICAL));
         painelControles.add(lblContador);
@@ -100,6 +102,13 @@ public class Main extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 resetarArvore();
+            }
+        });
+
+        btnInverter.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                inverterArvore();
             }
         });
 
@@ -238,6 +247,17 @@ public class Main extends JFrame {
             JOptionPane.showMessageDialog(this, "Árvore resetada com sucesso!", "Sucesso",
                     JOptionPane.INFORMATION_MESSAGE);
         }
+    }
+
+    private void inverterArvore() {
+        if (arvore.getRoot() == null) {
+            JOptionPane.showMessageDialog(this, "A árvore está vazia!", "Inverter Árvore", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        arvore.inverter();
+        painelArvore.ajustarParaCaberNaTela();
+        atualizarUI();
     }
 
     private void mostrarCaminhos() {
