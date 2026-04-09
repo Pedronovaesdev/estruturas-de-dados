@@ -33,6 +33,7 @@ public class Main extends JFrame {
         JButton btnResetar = new JButton("Resetar");
         JButton btnCaminhos = new JButton("Caminhos");
         JButton btnPercursos = new JButton("Percursos");
+        JButton btnAnalise = new JButton("Análise");
         JButton btnSair = new JButton("Sair");
 
         lblContador = new JLabel("Nós: 0");
@@ -60,6 +61,7 @@ public class Main extends JFrame {
         painelControles.add(btnTipoArvore);
         painelControles.add(new JSeparator(JSeparator.VERTICAL));
         painelControles.add(btnPercursos);
+        painelControles.add(btnAnalise);
         painelControles.add(btnSair);
 
         painelArvore = new PainelDesenho(arvore);
@@ -176,6 +178,13 @@ public class Main extends JFrame {
                 }
             }
         });
+
+        btnAnalise.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                mostrarAnaliseCompleta();
+            }
+        });
     }
 
     private void inserirNumero() {
@@ -267,6 +276,50 @@ public class Main extends JFrame {
         btnTipoArvore.setText("Tipo: " + arvore.getTiposArvore());
         painelArvore.repaint();
         painelArvore.ajustarParaCaberNaTela();
+    }
+
+    private void mostrarAnaliseCompleta() {
+        if (arvore.getRoot() == null) {
+            JOptionPane.showMessageDialog(this, "A árvore está vazia!", "Análise Completa", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("===== ANÁLISE COMPLETA DA ÁRVORE =====\n\n");
+
+        // Informações gerais da árvore
+        sb.append("INFORMAÇÕES GERAIS DA ÁRVORE:\n");
+        sb.append("   • Profundidade da Árvore: ").append(arvore.getProfundidadeArvore()).append("\n");
+        sb.append("   • Altura da Árvore: ").append(arvore.getAltura()).append("\n");
+        sb.append("   • Nível da Árvore: ").append(arvore.getNivelArvore()).append("\n");
+        sb.append("   • Total de Nós: ").append(arvore.getCount()).append("\n");
+
+        // Criar a interface com JTextArea
+        JTextArea textArea = new JTextArea(sb.toString());
+        textArea.setEditable(false);
+        textArea.setOpaque(false);
+        textArea.setFont(new Font("Monospaced", Font.PLAIN, 11));
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.setPreferredSize(new Dimension(500, 300));
+
+        JOptionPane.showMessageDialog(this, scrollPane, "Análise Completa da Árvore", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private Tree cloneArvore(Tree arvore) {
+        Tree novaArvore = new Tree();
+        if (arvore.getRoot() != null) {
+            novaArvore.setRoot(cloneNo(arvore.getRoot()));
+        }
+        return novaArvore;
+    }
+
+    private No cloneNo(No no) {
+        if (no == null) return null;
+        No novo = new No();
+        novo.item = no.item;
+        novo.esq = cloneNo(no.esq);
+        novo.dir = cloneNo(no.dir);
+        return novo;
     }
 
     public static void main(String[] args) {

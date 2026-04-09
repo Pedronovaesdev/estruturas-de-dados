@@ -38,9 +38,10 @@ public class Tree {
         else  { // se nao for a raiz
             No atual = root;
             No anterior;
-            while(true) {
+            // Duplicatas a direita: menor a esquerda, maior ou igual a direita.
+            while (true) {
                 anterior = atual;
-                if (v <= atual.item) {
+                if (v < atual.item) {
                     atual = atual.esq;
                     if (atual == null) {
                         anterior.esq = novo;
@@ -122,17 +123,12 @@ public class Tree {
 
     public String getTiposArvore() {
         if (root == null) return "Vazia";
-        String tipo = new String();
-        tipo = "Busca";
-        if (isBalanceada(root)) tipo = "Balanceada";
-        if (isCompleta()) tipo = "Completa";
-        if (isCheiaEstritamente()) tipo = "Cheia";
-        if (isDegenerada(root)) tipo = "Degenerada";
-
-        return tipo;
+        if (isDegenerada(root)) return "Degenerada";
+        if (isCheiaEstritamente()) return "Cheia";
+        if (isCompleta()) return "Completa";
+        if (isBalanceada(root)) return "Balanceada";
+        return "Busca";
     }
-
-    // Uma árvore cheia (estritamente binária) é aquela em que todos os nós internos têm exatamente 2 filhos
     // e todos os nós folhas estão no mesmo nível (altura)
     public boolean isCheiaEstritamente() {
         int altura = getAltura();
@@ -237,6 +233,59 @@ public class Tree {
             if (no.esq != null) encontrarCaminhos(no.esq, caminhoAtual, caminhos);
             if (no.dir != null) encontrarCaminhos(no.dir, caminhoAtual, caminhos);
         }
+    }
+
+    // Buscar nó pelo valor
+    public No buscarNo(long valor) {
+        return buscarNoHelper(root, valor);
+    }
+
+    private No buscarNoHelper(No no, long valor) {
+        if (no == null) return null;
+        if (no.item == valor) return no;
+        
+        No esq = buscarNoHelper(no.esq, valor);
+        if (esq != null) return esq;
+        
+        return buscarNoHelper(no.dir, valor);
+    }
+
+    // Obter altura de um nó pelo valor
+    public int getAlturaNoPorValor(long valor) {
+        No no = buscarNo(valor);
+        if (no == null) return -1;
+        return altura(no);
+    }
+
+    // Obter nível de um nó pelo valor
+    public int getNivelNoPorValor(long valor) {
+        No no = buscarNo(valor);
+        if (no == null) return -1;
+        return getNivelNo(no);
+    }
+
+    // Obter profundidade da árvore (mesma que altura)
+    public int getProfundidadeArvore() {
+        return getAltura();
+    }
+
+    // Inverter/Espelhar a árvore
+    public void inverterArvore() {
+        root = inverterNoHelper(root);
+    }
+
+    private No inverterNoHelper(No no) {
+        if (no == null) return null;
+        
+        // Recursivamente inverte as subárvores
+        No novoEsq = inverterNoHelper(no.dir);
+        No novoDir = inverterNoHelper(no.esq);
+        
+        // Troca os filhos
+        no.esq = novoEsq;
+        no.dir = novoDir;
+        
+        return no;
     }
 
 }
