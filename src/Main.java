@@ -11,11 +11,12 @@ public class Main extends JFrame {
     private JLabel lblContador;
     private JLabel lblAltura;
     private JButton btnTipoArvore;
+    private JButton btnBalancear;
 
     public Main() {
-        arvore = new Tree();
+        arvore = escolherTipoArvore(null);
 
-        setTitle("Árvore Binária de Busca");
+        setTitle("Árvores: BST e AVL");
         setSize(1000, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -33,6 +34,8 @@ public class Main extends JFrame {
         JButton btnResetar = new JButton("Resetar");
         JButton btnCaminhos = new JButton("Caminhos");
         JButton btnPercursos = new JButton("Percursos");
+        btnBalancear = new JButton("Balancear");
+        btnBalancear.setEnabled(arvore instanceof AVLTree);
         JButton btnSair = new JButton("Sair");
 
         lblContador = new JLabel("Nós: 0");
@@ -60,6 +63,7 @@ public class Main extends JFrame {
         painelControles.add(btnTipoArvore);
         painelControles.add(new JSeparator(JSeparator.VERTICAL));
         painelControles.add(btnPercursos);
+        painelControles.add(btnBalancear);
         painelControles.add(btnSair);
 
         painelArvore = new PainelDesenho(arvore);
@@ -115,6 +119,13 @@ public class Main extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 System.out.println("Saindo do programa");
                 System.exit(0);
+            }
+        });
+
+        btnBalancear.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                balancearArvore();
             }
         });
 
@@ -213,7 +224,12 @@ public class Main extends JFrame {
         if (caminho != null) {
             Tree novaArvore = GerenciadorArvore.carregarArvore(caminho);
             if (novaArvore != null) {
-                arvore = novaArvore;
+                Tree destino = escolherTipoArvore(this);
+                destino.setRoot(novaArvore.getRoot());
+                if (destino instanceof AVLTree) {
+                    ((AVLTree) destino).balancearArvore();
+                }
+                arvore = destino;
                 painelArvore.setArvore(arvore);
                 painelArvore.ajustarParaCaberNaTela();
                 atualizarUI();
@@ -232,12 +248,51 @@ public class Main extends JFrame {
                 JOptionPane.WARNING_MESSAGE);
 
         if (resposta == JOptionPane.YES_OPTION) {
-            arvore.resetar();
+            arvore = escolherTipoArvore(this);
+            painelArvore.setArvore(arvore);
             painelArvore.ajustarParaCaberNaTela();
             atualizarUI();
             JOptionPane.showMessageDialog(this, "Árvore resetada com sucesso!", "Sucesso",
                     JOptionPane.INFORMATION_MESSAGE);
         }
+    }
+
+    private Tree escolherTipoArvore(Component parent) {
+        String[] opcoes = {"Binária de Busca (BST)", "AVL (auto-balanceada)"};
+        int escolha = JOptionPane.showOptionDialog(
+                parent,
+                "Qual tipo de árvore deseja criar?",
+                "Tipo de Árvore",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                opcoes,
+                opcoes[0]
+        );
+        if (escolha == 1) return new AVLTree();
+        return new Tree();
+    }
+
+    private void balancearArvore() {
+        if (!(arvore instanceof AVLTree)) {
+            JOptionPane.showMessageDialog(this,
+                    "O balanceamento só está disponível para árvores AVL.",
+                    "Operação não disponível",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (arvore.getRoot() == null) {
+            JOptionPane.showMessageDialog(this, "A árvore está vazia!", "Aviso",
+                    JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        ((AVLTree) arvore).balancearArvore();
+        painelArvore.ajustarParaCaberNaTela();
+        atualizarUI();
+        JOptionPane.showMessageDialog(this,
+                "Árvore rebalanceada com rotações simples.",
+                "Balanceamento",
+                JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void mostrarCaminhos() {
@@ -265,6 +320,7 @@ public class Main extends JFrame {
         lblContador.setText("Nós: " + arvore.getCount());
         lblAltura.setText("Altura: " + arvore.getAltura());
         btnTipoArvore.setText("Tipo: " + arvore.getTiposArvore());
+        btnBalancear.setEnabled(arvore instanceof AVLTree);
         painelArvore.repaint();
         painelArvore.ajustarParaCaberNaTela();
     }
