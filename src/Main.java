@@ -11,6 +11,7 @@ public class Main extends JFrame {
     private JLabel lblContador;
     private JLabel lblAltura;
     private JButton btnTipoArvore;
+    private JCheckBox chkModoAVL;
 
     public Main() {
         arvore = new Tree();
@@ -29,13 +30,19 @@ public class Main extends JFrame {
 
         JButton btnInserir = new JButton("Inserir");
         JButton btnSalvar = new JButton("Salvar");
+        JButton btnSalvarRelatorio = new JButton("Salvar Relatório");
         JButton btnCarregar = new JButton("Carregar");
         JButton btnResetar = new JButton("Resetar");
         JButton btnInverter = new JButton("Inverter");
         JButton btnCaminhos = new JButton("Caminhos");
+        JButton btnExemplosAVL = new JButton("Exemplos AVL");
         JButton btnPercursos = new JButton("Percursos");
         JButton btnAnalise = new JButton("Análise");
         JButton btnSair = new JButton("Sair");
+
+        chkModoAVL = new JCheckBox("Modo AVL", true);
+        chkModoAVL.setBackground(Color.LIGHT_GRAY);
+        chkModoAVL.setFont(new Font("Arial", Font.BOLD, 12));
 
         lblContador = new JLabel("Nós: 0");
         lblContador.setFont(new Font("Arial", Font.BOLD, 12));
@@ -50,13 +57,16 @@ public class Main extends JFrame {
             JOptionPane.showMessageDialog(this, arvore.getTiposArvore(), "Tipo da Árvore", JOptionPane.INFORMATION_MESSAGE);
         });
 
+        painelControles.add(chkModoAVL);
         painelControles.add(btnInserir);
         painelControles.add(new JSeparator(JSeparator.VERTICAL));
         painelControles.add(btnSalvar);
+        painelControles.add(btnSalvarRelatorio);
         painelControles.add(btnCarregar);
         painelControles.add(btnResetar);
         painelControles.add(btnInverter);
         painelControles.add(btnCaminhos);
+        painelControles.add(btnExemplosAVL);
         painelControles.add(new JSeparator(JSeparator.VERTICAL));
         painelControles.add(lblContador);
         painelControles.add(lblAltura);
@@ -194,20 +204,126 @@ public class Main extends JFrame {
                 mostrarAnaliseCompleta();
             }
         });
+
+        btnExemplosAVL.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String[] opcoes = {
+                    "Rotação Simples à Esquerda (inserir 10, 20, 30)",
+                    "Rotação Simples à Direita (inserir 30, 20, 10)",
+                    "Rotação Dupla à Esquerda (inserir 10, 30, 20)",
+                    "Rotação Dupla à Direita (inserir 30, 10, 20)"
+                };
+                String escolha = (String) JOptionPane.showInputDialog(Main.this,
+                    "Escolha o exemplo de rotação AVL para carregar automaticamente:",
+                    "Exemplos AVL",
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    opcoes,
+                    opcoes[0]);
+
+                if (escolha != null) {
+                    arvore.resetar();
+                    chkModoAVL.setSelected(true);
+                    long[] valores;
+                    if (escolha.contains("Simples à Esquerda")) {
+                        valores = new long[]{10, 20, 30};
+                    } else if (escolha.contains("Simples à Direita")) {
+                        valores = new long[]{30, 20, 10};
+                    } else if (escolha.contains("Dupla à Esquerda")) {
+                        valores = new long[]{10, 30, 20};
+                    } else {
+                        valores = new long[]{30, 10, 20};
+                    }
+
+                    Tree.RelatorioAVL ultimoRelatorio = null;
+                    for (long v : valores) {
+                        ultimoRelatorio = arvore.inserirAVL(v);
+                    }
+                    atualizarUI();
+
+                    if (ultimoRelatorio != null && ultimoRelatorio.teveRotacao) {
+                        exibirPopupRotacao(ultimoRelatorio);
+                    }
+                }
+            }
+        });
+
+        btnSalvarRelatorio.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                salvarRelatorioPassos();
+            }
+        });
     }
 
     private void inserirNumero() {
         try {
             long valor = Long.parseLong(campoEntrada.getText());
-            arvore.inserir(valor);
-            campoEntrada.setText("");
-            campoEntrada.requestFocus();
-            atualizarUI();
+            if (chkModoAVL.isSelected()) {
+                Tree.RelatorioAVL relatorio = arvore.inserirAVL(valor);
+                campoEntrada.setText("");
+                campoEntrada.requestFocus();
+                atualizarUI();
+                if (relatorio.teveRotacao) {
+                    exibirPopupRotacao(relatorio);
+                }
+            } else {
+                arvore.inserir(valor);
+                campoEntrada.setText("");
+                campoEntrada.requestFocus();
+                atualizarUI();
+            }
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "Por favor, digite um número válido!", "Erro",
                     JOptionPane.ERROR_MESSAGE);
             campoEntrada.setText("");
         }
+    }
+
+    private void exibirPopupRotacao(Tree.RelatorioAVL relatorio) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Tipo de Rotação Aplicada:\n").append(relatorio.tipoRotacao).append("\n\n");
+        sb.append("Nó Pivô do Desbalanceamento:\n").append(relatorio.pivo).append("\n\n");
+        sb.append("Passo a Passo da Inserção e Balanceamento:\n");
+        for (String passo : relatorio.passos) {
+            sb.append(" • ").append(passo).append("\n");
+        }
+
+        JTextArea textArea = new JTextArea(sb.toString());
+        textArea.setEditable(false);
+        textArea.setOpaque(false);
+        textArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        textArea.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.setPreferredSize(new Dimension(550, 250));
+        scrollPane.setBorder(BorderFactory.createTitledBorder("Relatório de Execução AVL"));
+
+        JButton btnSalvarTxt = new JButton("Salvar em TXT");
+        btnSalvarTxt.addActionListener(e -> {
+            JFileChooser fc = new JFileChooser();
+            fc.setDialogTitle("Salvar Rotação AVL");
+            fc.setSelectedFile(new java.io.File("rotacao_avl_pivo_" + relatorio.pivo + ".txt"));
+            if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+                try (java.io.FileWriter fw = new java.io.FileWriter(fc.getSelectedFile())) {
+                    fw.write(sb.toString());
+                    fw.flush();
+                    JOptionPane.showMessageDialog(this, "Relatório da rotação salvo com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "Erro ao salvar: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        painelBotoes.add(btnSalvarTxt);
+
+        JPanel painelConteudo = new JPanel(new BorderLayout());
+        painelConteudo.add(scrollPane, BorderLayout.CENTER);
+        painelConteudo.add(painelBotoes, BorderLayout.SOUTH);
+
+        JOptionPane.showMessageDialog(this, painelConteudo, "Balanceamento AVL Executado", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void salvarArvore() {
@@ -222,6 +338,35 @@ public class Main extends JFrame {
             if (GerenciadorArvore.salvarArvore(arvore, caminho)) {
                 JOptionPane.showMessageDialog(this, "Árvore salva com sucesso em:\n" + caminho, "Sucesso",
                         JOptionPane.INFORMATION_MESSAGE);
+            }
+        }
+    }
+
+    private void salvarRelatorioPassos() {
+        if (arvore.historicoPassos == null || arvore.historicoPassos.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "O relatório de passos está vazio! Nenhuma ação foi registrada ainda.", "Aviso",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Salvar Relatório Passo a Passo");
+        fileChooser.setSelectedFile(new java.io.File("relatorio_passos_arvore.txt"));
+
+        int resultado = fileChooser.showSaveDialog(this);
+        if (resultado == JFileChooser.APPROVE_OPTION) {
+            try (java.io.FileWriter writer = new java.io.FileWriter(fileChooser.getSelectedFile())) {
+                writer.write("RELATÓRIO PASSO A PASSO DA CONSTRUÇÃO DA ÁRVORE\n");
+                writer.write("===============================================\n\n");
+                for (String linha : arvore.historicoPassos) {
+                    writer.write(linha + "\n");
+                }
+                writer.flush();
+                JOptionPane.showMessageDialog(this, "Relatório de passos salvo com sucesso!", "Sucesso",
+                        JOptionPane.INFORMATION_MESSAGE);
+            } catch (java.io.IOException e) {
+                JOptionPane.showMessageDialog(this, "Erro ao salvar relatório: " + e.getMessage(), "Erro",
+                        JOptionPane.ERROR_MESSAGE);
             }
         }
     }

@@ -5,6 +5,7 @@ import java.util.List;
 public class Tree {
     private No root;
     private int count;
+    public List<String> historicoPassos = new ArrayList<>();
 
     private static final String NLR = "NLR";
     private static final String LNR = "LNR";
@@ -13,6 +14,7 @@ public class Tree {
     public Tree() {
         root = null;
         count = 0;
+        historicoPassos.clear();
     }
 
     public No getRoot() {
@@ -64,6 +66,9 @@ public class Tree {
     public void resetar() {
         root = null;
         count = 0;
+        if (historicoPassos != null) {
+            historicoPassos.clear();
+        }
     }
 
     public void inverter() {
@@ -333,6 +338,148 @@ public class Tree {
         no.dir = novoDir;
         
         return no;
+    }
+
+    public static class RelatorioAVL {
+        public boolean teveRotacao = false;
+        public String tipoRotacao = "";
+        public Long pivo = null;
+        public List<String> passos = new ArrayList<>();
+    }
+
+    public RelatorioAVL inserirAVL(long v) {
+        RelatorioAVL relatorio = new RelatorioAVL();
+        relatorio.passos.add("Iniciando inserção AVL do valor: " + v);
+        root = inserirAVLRecursivo(root, v, relatorio);
+        this.count = contarNos(root);
+        if (!relatorio.teveRotacao) {
+            relatorio.passos.add("A árvore permaneceu balanceada. Nenhuma rotação foi necessária.");
+        }
+
+        if (historicoPassos == null) {
+            historicoPassos = new ArrayList<>();
+        }
+        historicoPassos.add("=== Inserção do valor: " + v + " ===");
+        historicoPassos.addAll(relatorio.passos);
+        if (relatorio.teveRotacao) {
+            historicoPassos.add("-> Rotação aplicada: " + relatorio.tipoRotacao + " no pivô " + relatorio.pivo);
+        }
+        historicoPassos.add("");
+
+        return relatorio;
+    }
+
+    private No inserirAVLRecursivo(No no, long v, RelatorioAVL relatorio) {
+        if (no == null) {
+            No novo = new No();
+            novo.item = v;
+            novo.esq = null;
+            novo.dir = null;
+            relatorio.passos.add("Nó " + v + " inserido com sucesso na posição folha.");
+            return novo;
+        }
+
+        if (v < no.item) {
+            relatorio.passos.add("Valor " + v + " menor que " + no.item + " -> descendo à esquerda.");
+            no.esq = inserirAVLRecursivo(no.esq, v, relatorio);
+        } else if (v > no.item) {
+            relatorio.passos.add("Valor " + v + " maior que " + no.item + " -> descendo à direita.");
+            no.dir = inserirAVLRecursivo(no.dir, v, relatorio);
+        } else {
+            relatorio.passos.add("Valor " + v + " já existe na árvore. Inserção ignorada.");
+            return no;
+        }
+
+        // Calcula o fator de balanceamento do nó atual
+        int altEsq = altura(no.esq);
+        int altDir = altura(no.dir);
+        int fator = altEsq - altDir;
+
+        // Se o nó desbalanceou, verificamos os 4 casos de rotação
+        // Capturamos apenas a rotação mais profunda (a primeira na volta da recursão)
+        if (fator > 1) {
+            relatorio.passos.add("Desbalanceamento detectado no nó " + no.item + " (Fator de Balanceamento: " + fator + ").");
+            int fatorEsq = (no.esq != null) ? (altura(no.esq.esq) - altura(no.esq.dir)) : 0;
+            
+            if (fatorEsq >= 0) {
+                if (!relatorio.teveRotacao) {
+                    relatorio.teveRotacao = true;
+                    relatorio.tipoRotacao = "Rotação Simples à Direita";
+                    relatorio.pivo = no.item;
+                    relatorio.passos.add("O filho esquerdo (" + no.esq.item + ") tem fator " + fatorEsq + " (>= 0).");
+                    relatorio.passos.add(">>> Aplicando " + relatorio.tipoRotacao + " no pivô " + relatorio.pivo + ".");
+                }
+                return rotacaoDireita(no, relatorio);
+            } else {
+                if (!relatorio.teveRotacao) {
+                    relatorio.teveRotacao = true;
+                    relatorio.tipoRotacao = "Rotação Dupla à Direita (Esquerda-Direita)";
+                    relatorio.pivo = no.item;
+                    relatorio.passos.add("O filho esquerdo (" + no.esq.item + ") tem fator " + fatorEsq + " (< 0).");
+                    relatorio.passos.add(">>> Aplicando " + relatorio.tipoRotacao + " no pivô " + relatorio.pivo + ".");
+                }
+                relatorio.passos.add("Passo 1: Rotação à esquerda no filho (" + no.esq.item + ").");
+                no.esq = rotacaoEsquerda(no.esq, relatorio);
+                relatorio.passos.add("Passo 2: Rotação à direita no pivô (" + no.item + ").");
+                return rotacaoDireita(no, relatorio);
+            }
+        }
+
+        if (fator < -1) {
+            relatorio.passos.add("Desbalanceamento detectado no nó " + no.item + " (Fator de Balanceamento: " + fator + ").");
+            int fatorDir = (no.dir != null) ? (altura(no.dir.esq) - altura(no.dir.dir)) : 0;
+            
+            if (fatorDir <= 0) {
+                if (!relatorio.teveRotacao) {
+                    relatorio.teveRotacao = true;
+                    relatorio.tipoRotacao = "Rotação Simples à Esquerda";
+                    relatorio.pivo = no.item;
+                    relatorio.passos.add("O filho direito (" + no.dir.item + ") tem fator " + fatorDir + " (<= 0).");
+                    relatorio.passos.add(">>> Aplicando " + relatorio.tipoRotacao + " no pivô " + relatorio.pivo + ".");
+                }
+                return rotacaoEsquerda(no, relatorio);
+            } else {
+                if (!relatorio.teveRotacao) {
+                    relatorio.teveRotacao = true;
+                    relatorio.tipoRotacao = "Rotação Dupla à Esquerda (Direita-Esquerda)";
+                    relatorio.pivo = no.item;
+                    relatorio.passos.add("O filho direito (" + no.dir.item + ") tem fator " + fatorDir + " (> 0).");
+                    relatorio.passos.add(">>> Aplicando " + relatorio.tipoRotacao + " no pivô " + relatorio.pivo + ".");
+                }
+                relatorio.passos.add("Passo 1: Rotação à direita no filho (" + no.dir.item + ").");
+                no.dir = rotacaoDireita(no.dir, relatorio);
+                relatorio.passos.add("Passo 2: Rotação à esquerda no pivô (" + no.item + ").");
+                return rotacaoEsquerda(no, relatorio);
+            }
+        }
+
+        return no;
+    }
+
+    private No rotacaoDireita(No y, RelatorioAVL relatorio) {
+        No x = y.esq;
+        No T2 = x.dir;
+
+        // Realiza a rotação
+        x.dir = y;
+        y.esq = T2;
+
+        relatorio.passos.add("  - Nó " + x.item + " sobe como nova raiz da subárvore.");
+        relatorio.passos.add("  - Nó " + y.item + " desce como filho direito de " + x.item + ".");
+        return x;
+    }
+
+    private No rotacaoEsquerda(No x, RelatorioAVL relatorio) {
+        No y = x.dir;
+        No T2 = y.esq;
+
+        // Realiza a rotação
+        y.esq = x;
+        x.dir = T2;
+
+        relatorio.passos.add("  - Nó " + y.item + " sobe como nova raiz da subárvore.");
+        relatorio.passos.add("  - Nó " + x.item + " desce como filho esquerdo de " + y.item + ".");
+        return y;
     }
 
 }
