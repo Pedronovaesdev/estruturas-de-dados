@@ -19,8 +19,109 @@ public class GerenciadorArvore {
         }
     }
 
+    public static boolean salvarArvoreJson(Tree arvore, String caminhoArquivo, String nome, int ordem) {
+        try (FileWriter writer = new FileWriter(caminhoArquivo)) {
+            StringBuilder json = new StringBuilder();
+            json.append("{\n");
+            json.append("  \"nome\": \"").append(nome).append("\",\n");
+            json.append("  \"ordem\": ").append(ordem).append(",\n");
+            json.append("  \"arvore\": ");
+            noToJson(arvore.getRoot(), json, 2);
+            json.append("\n}");
+            
+            writer.write(json.toString());
+            writer.flush();
+            return true;
+        } catch (IOException e) {
+            System.err.println("Erro ao salvar JSON: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private static void noToJson(No no, StringBuilder sb, int indent) {
+        if (no == null) {
+            sb.append("null");
+            return;
+        }
+
+        String space = " ".repeat(indent);
+        sb.append("{\n");
+        sb.append(space).append("  \"item\": ").append(no.item).append(",\n");
+        sb.append(space).append("  \"esq\": ");
+        noToJson(no.esq, sb, indent + 2);
+        sb.append(",\n");
+        sb.append(space).append("  \"dir\": ");
+        noToJson(no.dir, sb, indent + 2);
+        sb.append("\n").append(space).append("}");
+    }
+
+    public static Tree carregarArvoreJson(String caminhoArquivo) {
+        try {
+            String json = lerArquivoComoString(caminhoArquivo).trim();
+            Tree arvore = new Tree();
+            
+            int arvoreStart = json.indexOf("\"arvore\":");
+            if (arvoreStart == -1) return arvore;
+            
+            String arvoreJson = json.substring(json.indexOf("{", arvoreStart));
+            arvore.setRoot(parseNoJson(arvoreJson, new int[]{0}));
+            return arvore;
+        } catch (IOException e) {
+            System.err.println("Erro ao carregar JSON: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private static No parseNoJson(String json, int[] pos) {
+        skipWhitespace(json, pos);
+        if (json.startsWith("null", pos[0])) {
+            pos[0] += 4;
+            return null;
+        }
+
+        if (pos[0] >= json.length() || json.charAt(pos[0]) != '{') return null;
+        pos[0]++; // Pula '{'
+
+        No no = new No();
+        while (pos[0] < json.length() && json.charAt(pos[0]) != '}') {
+            skipWhitespace(json, pos);
+            if (pos[0] >= json.length() || json.charAt(pos[0]) == '}') break;
+            
+            if (json.startsWith("\"item\":", pos[0])) {
+                pos[0] += 7;
+                skipWhitespace(json, pos);
+                int start = pos[0];
+                while (pos[0] < json.length() && (Character.isDigit(json.charAt(pos[0])) || json.charAt(pos[0]) == '-')) {
+                    pos[0]++;
+                }
+                no.item = Long.parseLong(json.substring(start, pos[0]));
+            } else if (json.startsWith("\"esq\":", pos[0])) {
+                pos[0] += 6;
+                no.esq = parseNoJson(json, pos);
+            } else if (json.startsWith("\"dir\":", pos[0])) {
+                pos[0] += 6;
+                no.dir = parseNoJson(json, pos);
+            } else {
+                pos[0]++;
+            }
+        }
+        if (pos[0] < json.length() && json.charAt(pos[0]) == '}') {
+            pos[0]++;
+        }
+        return no;
+    }
+
+    private static void skipWhitespace(String s, int[] pos) {
+        while (pos[0] < s.length() && Character.isWhitespace(s.charAt(pos[0]))) {
+            pos[0]++;
+        }
+    }
 
     public static Tree carregarArvore(String caminhoArquivo) {
+        if (caminhoArquivo.toLowerCase().endsWith(".json")) {
+            return carregarArvoreJson(caminhoArquivo);
+        }
+
         Tree arvore = new Tree();
         try {
             String texto = lerArquivoComoString(caminhoArquivo).trim();
@@ -28,15 +129,18 @@ public class GerenciadorArvore {
                 return arvore;
             }
 
+            // Se o arquivo começar com '{', provavelmente é um JSON mesmo sem a extensão .json
+            if (texto.startsWith("{")) {
+                return carregarArvoreJson(caminhoArquivo);
+            }
+
             if (texto.startsWith("Árvore vazia")) {
                 return arvore;
             }
             
-            // Tenta ler no novo formato (Parênteses Aninhados)
             if (texto.startsWith("(")) {
                 arvore.setRoot(parseParentesesAninhados(texto, new int[]{0}));
             } else {
-                // Tenta ler no formato antigo (um valor por linha)
                 try (BufferedReader readerAntigo = new BufferedReader(new FileReader(caminhoArquivo))) {
                     String linhaAntiga;
                     while ((linhaAntiga = readerAntigo.readLine()) != null) {
@@ -62,12 +166,6 @@ public class GerenciadorArvore {
             }
 
             return arvore;
-        } catch (FileNotFoundException e) {
-            JOptionPane.showMessageDialog(null, 
-                "Arquivo não encontrado: " + caminhoArquivo, 
-                "Erro de Carregamento", 
-                JOptionPane.ERROR_MESSAGE);
-            return null;
         } catch (IOException e) {
             JOptionPane.showMessageDialog(null, 
                 "Erro ao carregar a árvore: " + e.getMessage(), 
@@ -89,7 +187,6 @@ public class GerenciadorArvore {
     }
 
     private static No parseParentesesAninhados(String texto, int[] indice) {
-        // Pula espaços
         while (indice[0] < texto.length() && Character.isWhitespace(texto.charAt(indice[0]))) {
             indice[0]++;
         }
@@ -100,18 +197,15 @@ public class GerenciadorArvore {
         
         indice[0]++; // Pula '('
         
-        // Pula espaços
         while (indice[0] < texto.length() && Character.isWhitespace(texto.charAt(indice[0]))) {
             indice[0]++;
         }
         
-        // Verifica se é um parêntese vazio "()"
         if (indice[0] < texto.length() && texto.charAt(indice[0]) == ')') {
             indice[0]++; // Pula ')'
             return null;
         }
         
-        // Extrai o valor do nó
         StringBuilder valor = new StringBuilder();
         while (indice[0] < texto.length() && texto.charAt(indice[0]) != '(' && texto.charAt(indice[0]) != ')') {
             char c = texto.charAt(indice[0]);
@@ -126,28 +220,22 @@ public class GerenciadorArvore {
             No no = new No();
             no.item = v;
             
-            // Pula espaços
             while (indice[0] < texto.length() && Character.isWhitespace(texto.charAt(indice[0]))) {
                 indice[0]++;
             }
             
-            // Parse subárvore esquerda
             no.esq = parseParentesesAninhados(texto, indice);
             
-            // Pula espaços
             while (indice[0] < texto.length() && Character.isWhitespace(texto.charAt(indice[0]))) {
                 indice[0]++;
             }
             
-            // Parse subárvore direita
             no.dir = parseParentesesAninhados(texto, indice);
             
-            // Pula espaços
             while (indice[0] < texto.length() && Character.isWhitespace(texto.charAt(indice[0]))) {
                 indice[0]++;
             }
             
-            // Pula ')'
             if (indice[0] < texto.length() && texto.charAt(indice[0]) == ')') {
                 indice[0]++;
             }
@@ -178,7 +266,6 @@ public class GerenciadorArvore {
                 
         sb.append("(").append(no.item);
         
-        // Subárvore esquerda
         if (no.esq != null) {
             sb.append(" ");
             converterParentesesAninhados(no.esq, sb);
@@ -186,7 +273,6 @@ public class GerenciadorArvore {
             sb.append(" ()");
         }
         
-        // Subárvore direita
         if (no.dir != null) {
             sb.append(" ");
             converterParentesesAninhados(no.dir, sb);
