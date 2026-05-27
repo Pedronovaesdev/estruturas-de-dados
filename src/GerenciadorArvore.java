@@ -3,6 +3,86 @@ import java.io.*;
 
 public class GerenciadorArvore {
 
+    public static void iniciarDialogoSalvar(JFrame parent, Tree arvore, int ordem) {
+        if (arvore.getRoot() == null) {
+            JOptionPane.showMessageDialog(parent, "A árvore está vazia! Não há nada para salvar.", "Aviso",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String[] opcoes = {"Normal (.txt)", "JSON (.json)"};
+        int escolha = JOptionPane.showOptionDialog(parent, 
+            "Escolha o formato de salvamento:", 
+            "Salvar Árvore", 
+            JOptionPane.DEFAULT_OPTION, 
+            JOptionPane.QUESTION_MESSAGE, 
+            null, 
+            opcoes, 
+            opcoes[0]);
+
+        if (escolha == -1) return;
+
+        String caminho = abrirDialogoSalvar(parent);
+        if (caminho != null) {
+            boolean sucesso;
+            if (escolha == 0) { // Normal
+                if (!caminho.toLowerCase().endsWith(".txt")) caminho += ".txt";
+                sucesso = salvarArvore(arvore, caminho);
+            } else { // JSON
+                if (!caminho.toLowerCase().endsWith(".json")) caminho += ".json";
+                sucesso = salvarArvoreJson(arvore, caminho, "ArvoreManual", ordem);
+            }
+
+            if (sucesso) {
+                JOptionPane.showMessageDialog(parent, "Árvore salva com sucesso em:\n" + caminho, "Sucesso",
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
+        }
+    }
+
+    public static Tree iniciarDialogoCarregar(JFrame parent) {
+        String caminho = abrirDialogoCarregar(parent);
+        if (caminho != null) {
+            Tree novaArvore = carregarArvore(caminho);
+            if (novaArvore != null) {
+                JOptionPane.showMessageDialog(parent,
+                        "Árvore carregada com sucesso!\nNós carregados: " + novaArvore.getCount(), "Sucesso",
+                        JOptionPane.INFORMATION_MESSAGE);
+                return novaArvore;
+            }
+        }
+        return null;
+    }
+
+    public static void salvarRelatorioPassos(JFrame parent, Tree arvore) {
+        if (arvore.historicoPassos == null || arvore.historicoPassos.isEmpty()) {
+            JOptionPane.showMessageDialog(parent, "O relatório de passos está vazio! Nenhuma ação foi registrada ainda.", "Aviso",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Salvar Relatório Passo a Passo");
+        fileChooser.setSelectedFile(new java.io.File("relatorio_passos_arvore.txt"));
+
+        int resultado = fileChooser.showSaveDialog(parent);
+        if (resultado == JFileChooser.APPROVE_OPTION) {
+            try (java.io.FileWriter writer = new java.io.FileWriter(fileChooser.getSelectedFile())) {
+                writer.write("RELATÓRIO PASSO A PASSO DA CONSTRUÇÃO DA ÁRVORE\n");
+                writer.write("===============================================\n\n");
+                for (String linha : arvore.historicoPassos) {
+                    writer.write(linha + "\n");
+                }
+                writer.flush();
+                JOptionPane.showMessageDialog(parent, "Relatório de passos salvo com sucesso!", "Sucesso",
+                        JOptionPane.INFORMATION_MESSAGE);
+            } catch (java.io.IOException e) {
+                JOptionPane.showMessageDialog(parent, "Erro ao salvar relatório: " + e.getMessage(), "Erro",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
     public static boolean salvarArvore(Tree arvore, String caminhoArquivo) {
         try (FileWriter writer = new FileWriter(caminhoArquivo)) {
             String conteudo = arvoreParaString(arvore.getRoot());

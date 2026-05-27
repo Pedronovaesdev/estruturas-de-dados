@@ -347,85 +347,21 @@ public class Main extends JFrame {
     }
 
     private void salvarArvore() {
-        if (arvore.getRoot() == null) {
-            JOptionPane.showMessageDialog(this, "A árvore está vazia! Não há nada para salvar.", "Aviso",
-                    JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        String[] opcoes = {"Normal (.txt)", "JSON (.json)"};
-        int escolha = JOptionPane.showOptionDialog(this, 
-            "Escolha o formato de salvamento:", 
-            "Salvar Árvore", 
-            JOptionPane.DEFAULT_OPTION, 
-            JOptionPane.QUESTION_MESSAGE, 
-            null, 
-            opcoes, 
-            opcoes[0]);
-
-        if (escolha == -1) return;
-
-        String caminho = GerenciadorArvore.abrirDialogoSalvar(this);
-        if (caminho != null) {
-            boolean sucesso;
-            if (escolha == 0) { // Normal
-                if (!caminho.toLowerCase().endsWith(".txt")) caminho += ".txt";
-                sucesso = GerenciadorArvore.salvarArvore(arvore, caminho);
-            } else { // JSON
-                if (!caminho.toLowerCase().endsWith(".json")) caminho += ".json";
-                sucesso = GerenciadorArvore.salvarArvoreJson(arvore, caminho, "ArvoreManual", proximaOrdem++);
-            }
-
-            if (sucesso) {
-                JOptionPane.showMessageDialog(this, "Árvore salva com sucesso em:\n" + caminho, "Sucesso",
-                        JOptionPane.INFORMATION_MESSAGE);
-            }
-        }
+        GerenciadorArvore.iniciarDialogoSalvar(this, arvore, proximaOrdem++);
     }
 
     private void salvarRelatorioPassos() {
-        if (arvore.historicoPassos == null || arvore.historicoPassos.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "O relatório de passos está vazio! Nenhuma ação foi registrada ainda.", "Aviso",
-                    JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Salvar Relatório Passo a Passo");
-        fileChooser.setSelectedFile(new java.io.File("relatorio_passos_arvore.txt"));
-
-        int resultado = fileChooser.showSaveDialog(this);
-        if (resultado == JFileChooser.APPROVE_OPTION) {
-            try (java.io.FileWriter writer = new java.io.FileWriter(fileChooser.getSelectedFile())) {
-                writer.write("RELATÓRIO PASSO A PASSO DA CONSTRUÇÃO DA ÁRVORE\n");
-                writer.write("===============================================\n\n");
-                for (String linha : arvore.historicoPassos) {
-                    writer.write(linha + "\n");
-                }
-                writer.flush();
-                JOptionPane.showMessageDialog(this, "Relatório de passos salvo com sucesso!", "Sucesso",
-                        JOptionPane.INFORMATION_MESSAGE);
-            } catch (java.io.IOException e) {
-                JOptionPane.showMessageDialog(this, "Erro ao salvar relatório: " + e.getMessage(), "Erro",
-                        JOptionPane.ERROR_MESSAGE);
-            }
-        }
+        GerenciadorArvore.salvarRelatorioPassos(this, arvore);
     }
 
     private void carregarArvore() {
-        String caminho = GerenciadorArvore.abrirDialogoCarregar(this);
-        if (caminho != null) {
-            Tree novaArvore = GerenciadorArvore.carregarArvore(caminho);
-            if (novaArvore != null) {
-                arvore = novaArvore;
-                painelArvore.setArvore(arvore);
-                painelArvore.ajustarParaCaberNaTela();
-                atualizarUI();
-                autoSave();
-                JOptionPane.showMessageDialog(this,
-                        "Árvore carregada com sucesso!\nNós carregados: " + arvore.getCount(), "Sucesso",
-                        JOptionPane.INFORMATION_MESSAGE);
-            }
+        Tree novaArvore = GerenciadorArvore.iniciarDialogoCarregar(this);
+        if (novaArvore != null) {
+            arvore = novaArvore;
+            painelArvore.setArvore(arvore);
+            painelArvore.ajustarParaCaberNaTela();
+            atualizarUI();
+            autoSave();
         }
     }
 
