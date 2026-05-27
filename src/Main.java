@@ -29,7 +29,7 @@ public class Main extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        JPanel painelControles = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        JPanel painelControles = new JPanel(new WrapLayout(FlowLayout.LEFT, 10, 5));
         painelControles.setBackground(Color.LIGHT_GRAY);
 
         campoEntrada = new JTextField(10);
