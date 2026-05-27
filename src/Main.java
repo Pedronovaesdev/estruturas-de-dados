@@ -13,6 +13,13 @@ public class Main extends JFrame {
     private JButton btnTipoArvore;
     private JCheckBox chkModoAVL;
 
+    // Variáveis para histórico e auto-save
+    private java.util.List<String> historicoArquivos = new java.util.ArrayList<>();
+    private int indiceHistorico = -1;
+    private int proximaOrdem = 0;
+    private JButton btnAnterior;
+    private JButton btnProximo;
+
     public Main() {
         arvore = new Tree();
 
@@ -22,7 +29,7 @@ public class Main extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        JPanel painelControles = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        JPanel painelControles = new JPanel(new WrapLayout(FlowLayout.LEFT, 10, 5));
         painelControles.setBackground(Color.LIGHT_GRAY);
 
         campoEntrada = new JTextField(10);
@@ -39,6 +46,11 @@ public class Main extends JFrame {
         JButton btnPercursos = new JButton("Percursos");
         JButton btnAnalise = new JButton("Análise");
         JButton btnSair = new JButton("Sair");
+
+        btnAnterior = new JButton("< Anterior");
+        btnProximo = new JButton("Próximo >");
+        btnAnterior.setEnabled(false);
+        btnProximo.setEnabled(false);
 
         chkModoAVL = new JCheckBox("Modo AVL", true);
         chkModoAVL.setBackground(Color.LIGHT_GRAY);
@@ -74,6 +86,9 @@ public class Main extends JFrame {
         painelControles.add(new JSeparator(JSeparator.VERTICAL));
         painelControles.add(btnPercursos);
         painelControles.add(btnAnalise);
+        painelControles.add(new JSeparator(JSeparator.VERTICAL));
+        painelControles.add(btnAnterior);
+        painelControles.add(btnProximo);
         painelControles.add(btnSair);
 
         painelArvore = new PainelDesenho(arvore);
@@ -138,6 +153,9 @@ public class Main extends JFrame {
                 System.exit(0);
             }
         });
+
+        btnAnterior.addActionListener(e -> navegarHistorico(-1));
+        btnProximo.addActionListener(e -> navegarHistorico(1));
 
         btnPercursos.addActionListener(new ActionListener() {
             @Override
@@ -265,6 +283,7 @@ public class Main extends JFrame {
                 campoEntrada.setText("");
                 campoEntrada.requestFocus();
                 atualizarUI();
+                autoSave();
                 if (relatorio.teveRotacao) {
                     exibirPopupRotacao(relatorio);
                 }
@@ -273,6 +292,7 @@ public class Main extends JFrame {
                 campoEntrada.setText("");
                 campoEntrada.requestFocus();
                 atualizarUI();
+                autoSave();
             }
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "Por favor, digite um número válido!", "Erro",
@@ -327,63 +347,21 @@ public class Main extends JFrame {
     }
 
     private void salvarArvore() {
-        if (arvore.getRoot() == null) {
-            JOptionPane.showMessageDialog(this, "A árvore está vazia! Não há nada para salvar.", "Aviso",
-                    JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        String caminho = GerenciadorArvore.abrirDialogoSalvar(this);
-        if (caminho != null) {
-            if (GerenciadorArvore.salvarArvore(arvore, caminho)) {
-                JOptionPane.showMessageDialog(this, "Árvore salva com sucesso em:\n" + caminho, "Sucesso",
-                        JOptionPane.INFORMATION_MESSAGE);
-            }
-        }
+        GerenciadorArvore.iniciarDialogoSalvar(this, arvore, proximaOrdem++);
     }
 
     private void salvarRelatorioPassos() {
-        if (arvore.historicoPassos == null || arvore.historicoPassos.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "O relatório de passos está vazio! Nenhuma ação foi registrada ainda.", "Aviso",
-                    JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Salvar Relatório Passo a Passo");
-        fileChooser.setSelectedFile(new java.io.File("relatorio_passos_arvore.txt"));
-
-        int resultado = fileChooser.showSaveDialog(this);
-        if (resultado == JFileChooser.APPROVE_OPTION) {
-            try (java.io.FileWriter writer = new java.io.FileWriter(fileChooser.getSelectedFile())) {
-                writer.write("RELATÓRIO PASSO A PASSO DA CONSTRUÇÃO DA ÁRVORE\n");
-                writer.write("===============================================\n\n");
-                for (String linha : arvore.historicoPassos) {
-                    writer.write(linha + "\n");
-                }
-                writer.flush();
-                JOptionPane.showMessageDialog(this, "Relatório de passos salvo com sucesso!", "Sucesso",
-                        JOptionPane.INFORMATION_MESSAGE);
-            } catch (java.io.IOException e) {
-                JOptionPane.showMessageDialog(this, "Erro ao salvar relatório: " + e.getMessage(), "Erro",
-                        JOptionPane.ERROR_MESSAGE);
-            }
-        }
+        GerenciadorArvore.salvarRelatorioPassos(this, arvore);
     }
 
     private void carregarArvore() {
-        String caminho = GerenciadorArvore.abrirDialogoCarregar(this);
-        if (caminho != null) {
-            Tree novaArvore = GerenciadorArvore.carregarArvore(caminho);
-            if (novaArvore != null) {
-                arvore = novaArvore;
-                painelArvore.setArvore(arvore);
-                painelArvore.ajustarParaCaberNaTela();
-                atualizarUI();
-                JOptionPane.showMessageDialog(this,
-                        "Árvore carregada com sucesso!\nNós carregados: " + arvore.getCount(), "Sucesso",
-                        JOptionPane.INFORMATION_MESSAGE);
-            }
+        Tree novaArvore = GerenciadorArvore.iniciarDialogoCarregar(this);
+        if (novaArvore != null) {
+            arvore = novaArvore;
+            painelArvore.setArvore(arvore);
+            painelArvore.ajustarParaCaberNaTela();
+            atualizarUI();
+            autoSave();
         }
     }
 
@@ -398,6 +376,7 @@ public class Main extends JFrame {
             arvore.resetar();
             painelArvore.ajustarParaCaberNaTela();
             atualizarUI();
+            autoSave();
             JOptionPane.showMessageDialog(this, "Árvore resetada com sucesso!", "Sucesso",
                     JOptionPane.INFORMATION_MESSAGE);
         }
@@ -468,6 +447,40 @@ public class Main extends JFrame {
         scrollPane.setPreferredSize(new Dimension(500, 300));
 
         JOptionPane.showMessageDialog(this, scrollPane, "Análise Completa da Árvore", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void autoSave() {
+        String filename = "src/salvar_arvore/history/arvore_step_" + proximaOrdem + ".json";
+        if (GerenciadorArvore.salvarArvoreJson(arvore, filename, "AutoSave_" + proximaOrdem, proximaOrdem)) {
+            // Se salvamos um novo estado, invalidamos o histórico à frente
+            while (historicoArquivos.size() > indiceHistorico + 1) {
+                historicoArquivos.remove(historicoArquivos.size() - 1);
+            }
+            historicoArquivos.add(filename);
+            indiceHistorico++;
+            proximaOrdem++;
+            atualizarBotoesHistorico();
+        }
+    }
+
+    private void navegarHistorico(int direcao) {
+        int novoIndice = indiceHistorico + direcao;
+        if (novoIndice >= 0 && novoIndice < historicoArquivos.size()) {
+            String caminho = historicoArquivos.get(novoIndice);
+            Tree novaArvore = GerenciadorArvore.carregarArvoreJson(caminho);
+            if (novaArvore != null) {
+                arvore = novaArvore;
+                indiceHistorico = novoIndice;
+                painelArvore.setArvore(arvore);
+                atualizarUI();
+                atualizarBotoesHistorico();
+            }
+        }
+    }
+
+    private void atualizarBotoesHistorico() {
+        btnAnterior.setEnabled(indiceHistorico > 0);
+        btnProximo.setEnabled(indiceHistorico < historicoArquivos.size() - 1);
     }
 
     private Tree cloneArvore(Tree arvore) {
