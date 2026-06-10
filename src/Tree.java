@@ -7,6 +7,7 @@ public class Tree {
     private int count;
     private TreeType type = TreeType.BST;
     public List<String> historicoPassos = new ArrayList<>();
+    private List<Long> valoresInseridos = new ArrayList<>();
 
     private static final String NLR = "NLR";
     private static final String LNR = "LNR";
@@ -34,10 +35,29 @@ public class Tree {
         this.type = type;
     }
 
+    public List<Long> getValoresInseridos() {
+        return new ArrayList<>(valoresInseridos);
+    }
+
     public void setRoot(No root) {
         this.root = root;
         this.count = contarNos(root);
         reconstruirPais(null, this.root);
+        // Se a ordem de inserção estiver vazia ao carregar, fazemos um percurso em nível como fallback
+        if (valoresInseridos.isEmpty() && root != null) {
+            popularOrdemPorNivel();
+        }
+    }
+
+    private void popularOrdemPorNivel() {
+        LinkedList<No> fila = new LinkedList<>();
+        fila.add(root);
+        while (!fila.isEmpty()) {
+            No n = fila.poll();
+            valoresInseridos.add(n.item);
+            if (n.esq != null) fila.add(n.esq);
+            if (n.dir != null) fila.add(n.dir);
+        }
     }
 
     private void reconstruirPais(No pai, No atual) {
@@ -71,6 +91,7 @@ public class Tree {
             root = novo;
             root.isRed = false;
             count++;
+            valoresInseridos.add(v);
         } else {
             No atual = root;
             No anterior = null;
@@ -91,15 +112,15 @@ public class Tree {
                 anterior.dir = novo;
             }
             count++;
+            valoresInseridos.add(v);
         }
     }
 
     public void resetar() {
         root = null;
         count = 0;
-        if (historicoPassos != null) {
-            historicoPassos.clear();
-        }
+        historicoPassos.clear();
+        valoresInseridos.clear();
     }
 
     public void inverter() {
@@ -219,12 +240,25 @@ public class Tree {
         return 1 + contarNos(no.esq) + contarNos(no.dir);
     }
 
+    public No buscarNo(long valor) {
+        return buscarNoHelper(root, valor);
+    }
+
+    private No buscarNoHelper(No no, long valor) {
+        if (no == null) return null;
+        if (no.item == valor) return no;
+        if (valor < no.item) return buscarNoHelper(no.esq, valor);
+        return buscarNoHelper(no.dir, valor);
+    }
+
     // --- Lógica AVL ---
     public RelatorioRB inserirAVL(long v) {
+        if (buscarNo(v) != null) return new RelatorioRB(); 
         RelatorioRB relatorio = new RelatorioRB();
         relatorio.passos.add("Iniciando inserção AVL do valor: " + v);
         root = inserirAVLRecursivo(root, null, v, relatorio);
         this.count = contarNos(root);
+        valoresInseridos.add(v);
         historicoPassos.add("=== Inserção AVL: " + v + " ===");
         historicoPassos.addAll(relatorio.passos);
         return relatorio;
@@ -298,6 +332,7 @@ public class Tree {
     }
 
     public RelatorioRB inserirRB(long v) {
+        if (buscarNo(v) != null) return new RelatorioRB();
         RelatorioRB relatorio = new RelatorioRB();
         relatorio.passos.add("Iniciando inserção Red-Black do valor: " + v);
         No novo = new No();
@@ -327,6 +362,7 @@ public class Tree {
             }
         }
         this.count = contarNos(root);
+        valoresInseridos.add(v);
         historicoPassos.add("=== Inserção RB: " + v + " ===");
         historicoPassos.addAll(relatorio.passos);
         return relatorio;

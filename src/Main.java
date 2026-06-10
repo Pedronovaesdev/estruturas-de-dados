@@ -38,8 +38,24 @@ public class Main extends JFrame {
         comboTipoArvore = new JComboBox<>(TreeType.values());
         comboTipoArvore.setSelectedItem(TreeType.BST);
         comboTipoArvore.addActionListener(e -> {
-            arvore.setType((TreeType) comboTipoArvore.getSelectedItem());
-            atualizarUI();
+            TreeType novoTipo = (TreeType) comboTipoArvore.getSelectedItem();
+            if (novoTipo != arvore.getType()) {
+                // Captura a ordem original de inserção
+                java.util.List<Long> valores = arvore.getValoresInseridos();
+                
+                // Reseta a árvore mantendo o histórico de arquivos se necessário
+                // Mas limpando a estrutura atual
+                arvore.resetar();
+                arvore.setType(novoTipo);
+                
+                // Reinserção silenciosa (sem popups)
+                for (Long v : valores) {
+                    arvore.inserirComLogica(v);
+                }
+                
+                atualizarUI();
+                autoSave();
+            }
         });
         painelControles.add(new JLabel("Tipo:"));
         painelControles.add(comboTipoArvore);
