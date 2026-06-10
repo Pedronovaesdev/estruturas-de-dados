@@ -28,6 +28,15 @@ public class Tree {
     public void setRoot(No root) {
         this.root = root;
         this.count = contarNos(root);
+        // Ao carregar, precisamos reconstruir os ponteiros de pai
+        reconstruirPais(null, this.root);
+    }
+
+    private void reconstruirPais(No pai, No atual) {
+        if (atual == null) return;
+        atual.pai = pai;
+        reconstruirPais(atual, atual.esq);
+        reconstruirPais(atual, atual.dir);
     }
 
     public void inserir(long v) {
@@ -35,31 +44,35 @@ public class Tree {
         novo.item = v;
         novo.dir = null;
         novo.esq = null;
+        novo.pai = null;
+        novo.isRed = true;
 
         if (root == null) {
             root = novo;
+            root.isRed = false; // Raiz é sempre preta
             count++;
-        } else { // se nao for a raiz
+        } else {
             No atual = root;
-            No anterior;
-            while (true) {
+            No anterior = null;
+            while (atual != null) {
                 anterior = atual;
                 if (v < atual.item) {
                     atual = atual.esq;
-                    if (atual == null) {
-                        anterior.esq = novo;
-                        count++;
-                        return;
-                    }
-                } else {
+                } else if (v > atual.item) {
                     atual = atual.dir;
-                    if (atual == null) {
-                        anterior.dir = novo;
-                        count++;
-                        return;
-                    }
+                } else {
+                    return; // Valor já existe
                 }
             }
+            
+            novo.pai = anterior;
+            if (v < anterior.item) {
+                anterior.esq = novo;
+            } else {
+                anterior.dir = novo;
+            }
+            count++;
+            // Aqui não balanceia, é o inserir simples
         }
     }
 
@@ -156,23 +169,18 @@ public class Tree {
     public String getTiposArvore() {
         if (root == null)
             return "Vazia";
-        String tipo = new String();
-        tipo = "Busca";
-        if (isBalanceada(root))
-            tipo = "Balanceada";
-        if (isCompleta())
-            tipo = "Completa";
-        if (isCheiaEstritamente())
-            tipo = "Cheia";
-        if (isDegenerada(root))
-            tipo = "Degenerada";
+        
+        List<String> tipos = new ArrayList<>();
+        tipos.add("Red-Black");
+        
+        if (isBalanceada(root)) tipos.add("Balanceada (Padrão AVL)");
+        if (isCompleta()) tipos.add("Completa");
+        if (isCheiaEstritamente()) tipos.add("Cheia");
+        if (isDegenerada(root)) tipos.add("Degenerada");
 
-        return tipo;
+        return String.join(", ", tipos);
     }
 
-    // Uma árvore cheia (estritamente binária) é aquela em que todos os nós internos
-    // têm exatamente 2 filhos
-    // e todos os nós folhas estão no mesmo nível (altura)
     public boolean isCheiaEstritamente() {
         int altura = getAltura();
         return isCheiaEstritamenteHelper(root, 0, altura);
@@ -274,7 +282,7 @@ public class Tree {
         if (no == null)
             return;
 
-        caminhoAtual += no.item;
+        caminhoAtual += no.item + (no.isRed ? "(R)" : "(B)");
 
         if (no.esq == null && no.dir == null) {
             caminhos.add(caminhoAtual);
@@ -287,7 +295,6 @@ public class Tree {
         }
     }
 
-    // Buscar nó pelo valor
     public No buscarNo(long valor) {
         return buscarNoHelper(root, valor);
     }
@@ -296,190 +303,192 @@ public class Tree {
         if (no == null) return null;
         if (no.item == valor) return no;
         
-        No esq = buscarNoHelper(no.esq, valor);
-        if (esq != null) return esq;
-        
+        if (valor < no.item) return buscarNoHelper(no.esq, valor);
         return buscarNoHelper(no.dir, valor);
     }
 
-    // Obter altura de um nó pelo valor
     public int getAlturaNoPorValor(long valor) {
         No no = buscarNo(valor);
         if (no == null) return -1;
         return altura(no);
     }
 
-    // Obter nível de um nó pelo valor
     public int getNivelNoPorValor(long valor) {
         No no = buscarNo(valor);
         if (no == null) return -1;
         return getNivelNo(no);
     }
 
-    // Obter profundidade da árvore (mesma que altura)
     public int getProfundidadeArvore() {
         return getAltura();
     }
 
-    // Inverter/Espelhar a árvore
     public void inverterArvore() {
         root = inverterNoHelper(root);
     }
 
     private No inverterNoHelper(No no) {
         if (no == null) return null;
-        
-        // Recursivamente inverte as subárvores
         No novoEsq = inverterNoHelper(no.dir);
         No novoDir = inverterNoHelper(no.esq);
-        
-        // Troca os filhos
         no.esq = novoEsq;
         no.dir = novoDir;
-        
         return no;
     }
 
-    public static class RelatorioAVL {
-        public boolean teveRotacao = false;
-        public String tipoRotacao = "";
-        public Long pivo = null;
+    // --- Lógica Red-Black ---
+
+    public static class RelatorioRB {
+        public boolean teveBalanceamento = false;
+        public String tipoAcao = "";
         public List<String> passos = new ArrayList<>();
     }
 
-    public RelatorioAVL inserirAVL(long v) {
-        RelatorioAVL relatorio = new RelatorioAVL();
-        relatorio.passos.add("Iniciando inserção AVL do valor: " + v);
-        root = inserirAVLRecursivo(root, v, relatorio);
-        this.count = contarNos(root);
-        if (!relatorio.teveRotacao) {
-            relatorio.passos.add("A árvore permaneceu balanceada. Nenhuma rotação foi necessária.");
+    public RelatorioRB inserirRB(long v) {
+        RelatorioRB relatorio = new RelatorioRB();
+        relatorio.passos.add("Iniciando inserção Red-Black do valor: " + v);
+
+        No novo = new No();
+        novo.item = v;
+        novo.isRed = true; // Todo novo nó nasce vermelho
+
+        if (root == null) {
+            root = novo;
+            root.isRed = false; // Raiz deve ser preta
+            relatorio.passos.add("Nó " + v + " inserido como raiz (cor alterada para PRETO).");
+        } else {
+            No atual = root;
+            No pai = null;
+            while (atual != null) {
+                pai = atual;
+                if (v < atual.item) {
+                    relatorio.passos.add("Valor " + v + " < " + atual.item + " -> Esquerda.");
+                    atual = atual.esq;
+                } else if (v > atual.item) {
+                    relatorio.passos.add("Valor " + v + " > " + atual.item + " -> Direita.");
+                    atual = atual.dir;
+                } else {
+                    relatorio.passos.add("Valor " + v + " já existe. Abortando.");
+                    return relatorio;
+                }
+            }
+
+            novo.pai = pai;
+            if (v < pai.item) {
+                pai.esq = novo;
+            } else {
+                pai.dir = novo;
+            }
+            relatorio.passos.add("Nó " + v + " inserido como filho de " + pai.item + " (cor: VERMELHO).");
+            
+            if (pai.isRed) {
+                relatorio.teveBalanceamento = true;
+                balancearAposInsercao(novo, relatorio);
+            }
         }
 
-        if (historicoPassos == null) {
-            historicoPassos = new ArrayList<>();
-        }
-        historicoPassos.add("=== Inserção do valor: " + v + " ===");
+        this.count = contarNos(root);
+        
+        if (historicoPassos == null) historicoPassos = new ArrayList<>();
+        historicoPassos.add("=== Inserção RB: " + v + " ===");
         historicoPassos.addAll(relatorio.passos);
-        if (relatorio.teveRotacao) {
-            historicoPassos.add("-> Rotação aplicada: " + relatorio.tipoRotacao + " no pivô " + relatorio.pivo);
-        }
         historicoPassos.add("");
 
         return relatorio;
     }
 
-    private No inserirAVLRecursivo(No no, long v, RelatorioAVL relatorio) {
-        if (no == null) {
-            No novo = new No();
-            novo.item = v;
-            novo.esq = null;
-            novo.dir = null;
-            relatorio.passos.add("Nó " + v + " inserido com sucesso na posição folha.");
-            return novo;
-        }
-
-        if (v < no.item) {
-            relatorio.passos.add("Valor " + v + " menor que " + no.item + " -> descendo à esquerda.");
-            no.esq = inserirAVLRecursivo(no.esq, v, relatorio);
-        } else if (v > no.item) {
-            relatorio.passos.add("Valor " + v + " maior que " + no.item + " -> descendo à direita.");
-            no.dir = inserirAVLRecursivo(no.dir, v, relatorio);
-        } else {
-            relatorio.passos.add("Valor " + v + " já existe na árvore. Inserção ignorada.");
-            return no;
-        }
-
-        // Calcula o fator de balanceamento do nó atual
-        int altEsq = altura(no.esq);
-        int altDir = altura(no.dir);
-        int fator = altEsq - altDir;
-
-        // Se o nó desbalanceou, verificamos os 4 casos de rotação
-        // Capturamos apenas a rotação mais profunda (a primeira na volta da recursão)
-        if (fator > 1) {
-            relatorio.passos.add("Desbalanceamento detectado no nó " + no.item + " (Fator de Balanceamento: " + fator + ").");
-            int fatorEsq = (no.esq != null) ? (altura(no.esq.esq) - altura(no.esq.dir)) : 0;
-            
-            if (fatorEsq >= 0) {
-                if (!relatorio.teveRotacao) {
-                    relatorio.teveRotacao = true;
-                    relatorio.tipoRotacao = "Rotação Simples à Direita";
-                    relatorio.pivo = no.item;
-                    relatorio.passos.add("O filho esquerdo (" + no.esq.item + ") tem fator " + fatorEsq + " (>= 0).");
-                    relatorio.passos.add(">>> Aplicando " + relatorio.tipoRotacao + " no pivô " + relatorio.pivo + ".");
+    private void balancearAposInsercao(No z, RelatorioRB relatorio) {
+        while (z.pai != null && z.pai.isRed) {
+            if (z.pai == z.pai.pai.esq) {
+                No y = z.pai.pai.dir; // tio
+                if (y != null && y.isRed) {
+                    // Caso 1: Tio é vermelho -> recolorir
+                    relatorio.passos.add("Caso 1: Tio (" + y.item + ") é VERMELHO.");
+                    z.pai.isRed = false;
+                    y.isRed = false;
+                    z.pai.pai.isRed = true;
+                    relatorio.passos.add("Recoloração: Pai e Tio -> PRETO, Avô -> VERMELHO.");
+                    z = z.pai.pai;
+                } else {
+                    // Caso 2 ou 3: Tio é preto
+                    if (z == z.pai.dir) {
+                        // Caso 2: z é filho direito -> rotação à esquerda no pai
+                        relatorio.passos.add("Caso 2: Tio é PRETO e nó é filho DIREITO.");
+                        z = z.pai;
+                        relatorio.passos.add("Rotação Esquerda no nó " + z.item + ".");
+                        rotacaoEsquerda(z);
+                    }
+                    // Caso 3: z é filho esquerdo -> rotação à direita no avô
+                    relatorio.passos.add("Caso 3: Tio é PRETO e nó é filho ESQUERDO.");
+                    z.pai.isRed = false;
+                    z.pai.pai.isRed = true;
+                    relatorio.passos.add("Recoloração: Pai -> PRETO, Avô -> VERMELHO.");
+                    relatorio.passos.add("Rotação Direita no avô " + z.pai.pai.item + ".");
+                    rotacaoDireita(z.pai.pai);
                 }
-                return rotacaoDireita(no, relatorio);
             } else {
-                if (!relatorio.teveRotacao) {
-                    relatorio.teveRotacao = true;
-                    relatorio.tipoRotacao = "Rotação Dupla à Direita (Esquerda-Direita)";
-                    relatorio.pivo = no.item;
-                    relatorio.passos.add("O filho esquerdo (" + no.esq.item + ") tem fator " + fatorEsq + " (< 0).");
-                    relatorio.passos.add(">>> Aplicando " + relatorio.tipoRotacao + " no pivô " + relatorio.pivo + ".");
+                // Simétrico
+                No y = z.pai.pai.esq; // tio
+                if (y != null && y.isRed) {
+                    relatorio.passos.add("Caso 1 (Simétrico): Tio (" + y.item + ") é VERMELHO.");
+                    z.pai.isRed = false;
+                    y.isRed = false;
+                    z.pai.pai.isRed = true;
+                    relatorio.passos.add("Recoloração: Pai e Tio -> PRETO, Avô -> VERMELHO.");
+                    z = z.pai.pai;
+                } else {
+                    if (z == z.pai.esq) {
+                        relatorio.passos.add("Caso 2 (Simétrico): Tio é PRETO e nó é filho ESQUERDO.");
+                        z = z.pai;
+                        relatorio.passos.add("Rotação Direita no nó " + z.item + ".");
+                        rotacaoDireita(z);
+                    }
+                    relatorio.passos.add("Caso 3 (Simétrico): Tio é PRETO e nó é filho DIREITO.");
+                    z.pai.isRed = false;
+                    z.pai.pai.isRed = true;
+                    relatorio.passos.add("Recoloração: Pai -> PRETO, Avô -> VERMELHO.");
+                    relatorio.passos.add("Rotação Esquerda no avô " + z.pai.pai.item + ".");
+                    rotacaoEsquerda(z.pai.pai);
                 }
-                relatorio.passos.add("Passo 1: Rotação à esquerda no filho (" + no.esq.item + ").");
-                no.esq = rotacaoEsquerda(no.esq, relatorio);
-                relatorio.passos.add("Passo 2: Rotação à direita no pivô (" + no.item + ").");
-                return rotacaoDireita(no, relatorio);
             }
         }
-
-        if (fator < -1) {
-            relatorio.passos.add("Desbalanceamento detectado no nó " + no.item + " (Fator de Balanceamento: " + fator + ").");
-            int fatorDir = (no.dir != null) ? (altura(no.dir.esq) - altura(no.dir.dir)) : 0;
-            
-            if (fatorDir <= 0) {
-                if (!relatorio.teveRotacao) {
-                    relatorio.teveRotacao = true;
-                    relatorio.tipoRotacao = "Rotação Simples à Esquerda";
-                    relatorio.pivo = no.item;
-                    relatorio.passos.add("O filho direito (" + no.dir.item + ") tem fator " + fatorDir + " (<= 0).");
-                    relatorio.passos.add(">>> Aplicando " + relatorio.tipoRotacao + " no pivô " + relatorio.pivo + ".");
-                }
-                return rotacaoEsquerda(no, relatorio);
-            } else {
-                if (!relatorio.teveRotacao) {
-                    relatorio.teveRotacao = true;
-                    relatorio.tipoRotacao = "Rotação Dupla à Esquerda (Direita-Esquerda)";
-                    relatorio.pivo = no.item;
-                    relatorio.passos.add("O filho direito (" + no.dir.item + ") tem fator " + fatorDir + " (> 0).");
-                    relatorio.passos.add(">>> Aplicando " + relatorio.tipoRotacao + " no pivô " + relatorio.pivo + ".");
-                }
-                relatorio.passos.add("Passo 1: Rotação à direita no filho (" + no.dir.item + ").");
-                no.dir = rotacaoDireita(no.dir, relatorio);
-                relatorio.passos.add("Passo 2: Rotação à esquerda no pivô (" + no.item + ").");
-                return rotacaoEsquerda(no, relatorio);
-            }
-        }
-
-        return no;
+        root.isRed = false;
     }
 
-    private No rotacaoDireita(No y, RelatorioAVL relatorio) {
-        No x = y.esq;
-        No T2 = x.dir;
-
-        // Realiza a rotação
-        x.dir = y;
-        y.esq = T2;
-
-        relatorio.passos.add("  - Nó " + x.item + " sobe como nova raiz da subárvore.");
-        relatorio.passos.add("  - Nó " + y.item + " desce como filho direito de " + x.item + ".");
-        return x;
-    }
-
-    private No rotacaoEsquerda(No x, RelatorioAVL relatorio) {
+    private void rotacaoEsquerda(No x) {
         No y = x.dir;
-        No T2 = y.esq;
-
-        // Realiza a rotação
+        x.dir = y.esq;
+        if (y.esq != null) {
+            y.esq.pai = x;
+        }
+        y.pai = x.pai;
+        if (x.pai == null) {
+            root = y;
+        } else if (x == x.pai.esq) {
+            x.pai.esq = y;
+        } else {
+            x.pai.dir = y;
+        }
         y.esq = x;
-        x.dir = T2;
+        x.pai = y;
+    }
 
-        relatorio.passos.add("  - Nó " + y.item + " sobe como nova raiz da subárvore.");
-        relatorio.passos.add("  - Nó " + x.item + " desce como filho esquerdo de " + y.item + ".");
-        return y;
+    private void rotacaoDireita(No y) {
+        No x = y.esq;
+        y.esq = x.dir;
+        if (x.dir != null) {
+            x.dir.pai = y;
+        }
+        x.pai = y.pai;
+        if (y.pai == null) {
+            root = x;
+        } else if (y == y.pai.dir) {
+            y.pai.dir = x;
+        } else {
+            y.pai.esq = x;
+        }
+        x.dir = y;
+        y.pai = x;
     }
 
 }

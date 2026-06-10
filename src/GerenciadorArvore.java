@@ -127,6 +127,7 @@ public class GerenciadorArvore {
         String space = " ".repeat(indent);
         sb.append("{\n");
         sb.append(space).append("  \"item\": ").append(no.item).append(",\n");
+        sb.append(space).append("  \"isRed\": ").append(no.isRed).append(",\n");
         sb.append(space).append("  \"esq\": ");
         noToJson(no.esq, sb, indent + 2);
         sb.append(",\n");
@@ -175,6 +176,16 @@ public class GerenciadorArvore {
                     pos[0]++;
                 }
                 no.item = Long.parseLong(json.substring(start, pos[0]));
+            } else if (json.startsWith("\"isRed\":", pos[0])) {
+                pos[0] += 8;
+                skipWhitespace(json, pos);
+                if (json.startsWith("true", pos[0])) {
+                    no.isRed = true;
+                    pos[0] += 4;
+                } else {
+                    no.isRed = false;
+                    pos[0] += 5;
+                }
             } else if (json.startsWith("\"esq\":", pos[0])) {
                 pos[0] += 6;
                 no.esq = parseNoJson(json, pos);

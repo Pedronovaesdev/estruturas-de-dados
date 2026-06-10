@@ -1,0 +1,35 @@
+{
+  "nome": "ArvoreManual",
+  "ordem": 46,
+  "arvore": {
+    "item": 38,
+    "isRed": false,
+    "esq": {
+      "item": 19,
+      "isRed": true,
+      "esq": {
+        "item": 12,
+        "isRed": false,
+        "esq": {
+          "item": 8,
+          "isRed": true,
+          "esq": null,
+          "dir": null
+        },
+        "dir": null
+      },
+      "dir": {
+        "item": 31,
+        "isRed": false,
+        "esq": null,
+        "dir": null
+      }
+    },
+    "dir": {
+      "item": 41,
+      "isRed": false,
+      "esq": null,
+      "dir": null
+    }
+  }
+}

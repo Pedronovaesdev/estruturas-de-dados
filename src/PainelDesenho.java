@@ -158,7 +158,11 @@ public class PainelDesenho extends JPanel {
             desenharNo(g, no.dir, x + espacoX, y + espacoY, Math.max(20, espacoX / 2), espacoY, raio, nivel + 1);
         }
 
-        g.setColor(new Color(135, 206, 250));
+        if (no.isRed) {
+            g.setColor(new Color(255, 100, 100)); // Vermelho
+        } else {
+            g.setColor(new Color(50, 50, 50)); // Preto/Cinza escuro
+        }
         g.fillOval(x - raio, y - raio, 2 * raio, 2 * raio);
         g.setColor(Color.BLACK);
         g.drawOval(x - raio, y - raio, 2 * raio, 2 * raio);
@@ -167,6 +171,12 @@ public class PainelDesenho extends JPanel {
         FontMetrics fm = g.getFontMetrics();
         int textoX = x - (fm.stringWidth(texto) / 2);
         int textoY = y + (fm.getAscent() / 2) - 2;
+        
+        if (no.isRed) {
+            g.setColor(Color.BLACK);
+        } else {
+            g.setColor(Color.WHITE);
+        }
         g.drawString(texto, textoX, textoY);
 
         Font fonteOriginal = g.getFont();

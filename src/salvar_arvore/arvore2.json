@@ -1,0 +1,55 @@
+{
+  "nome": "ArvoreManual",
+  "ordem": 32,
+  "arvore": {
+    "item": 15,
+    "isRed": false,
+    "esq": {
+      "item": 10,
+      "isRed": true,
+      "esq": {
+        "item": 5,
+        "isRed": false,
+        "esq": {
+          "item": 3,
+          "isRed": true,
+          "esq": null,
+          "dir": null
+        },
+        "dir": null
+      },
+      "dir": {
+        "item": 12,
+        "isRed": false,
+        "esq": null,
+        "dir": null
+      }
+    },
+    "dir": {
+      "item": 20,
+      "isRed": true,
+      "esq": {
+        "item": 17,
+        "isRed": false,
+        "esq": null,
+        "dir": null
+      },
+      "dir": {
+        "item": 25,
+        "isRed": false,
+        "esq": {
+          "item": 24,
+          "isRed": true,
+          "esq": null,
+          "dir": null
+        },
+        "dir": {
+          "item": 30,
+          "isRed": true,
+          "esq": null,
+          "dir": null
+        }
+      }
+    }
+  }
+}

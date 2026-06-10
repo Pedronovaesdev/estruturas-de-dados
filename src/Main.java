@@ -11,7 +11,7 @@ public class Main extends JFrame {
     private JLabel lblContador;
     private JLabel lblAltura;
     private JButton btnTipoArvore;
-    private JCheckBox chkModoAVL;
+    private JCheckBox chkModoRB;
 
     // Variáveis para histórico e auto-save
     private java.util.List<String> historicoArquivos = new java.util.ArrayList<>();
@@ -42,7 +42,7 @@ public class Main extends JFrame {
         JButton btnResetar = new JButton("Resetar");
         JButton btnInverter = new JButton("Inverter");
         JButton btnCaminhos = new JButton("Caminhos");
-        JButton btnExemplosAVL = new JButton("Exemplos AVL");
+        JButton btnExemplosRB = new JButton("Exemplos Red-Black");
         JButton btnPercursos = new JButton("Percursos");
         JButton btnAnalise = new JButton("Análise");
         JButton btnSair = new JButton("Sair");
@@ -52,9 +52,9 @@ public class Main extends JFrame {
         btnAnterior.setEnabled(false);
         btnProximo.setEnabled(false);
 
-        chkModoAVL = new JCheckBox("Modo AVL", true);
-        chkModoAVL.setBackground(Color.LIGHT_GRAY);
-        chkModoAVL.setFont(new Font("Arial", Font.BOLD, 12));
+        chkModoRB = new JCheckBox("Modo Red-Black", true);
+        chkModoRB.setBackground(Color.LIGHT_GRAY);
+        chkModoRB.setFont(new Font("Arial", Font.BOLD, 12));
 
         lblContador = new JLabel("Nós: 0");
         lblContador.setFont(new Font("Arial", Font.BOLD, 12));
@@ -69,7 +69,7 @@ public class Main extends JFrame {
             JOptionPane.showMessageDialog(this, arvore.getTiposArvore(), "Tipo da Árvore", JOptionPane.INFORMATION_MESSAGE);
         });
 
-        painelControles.add(chkModoAVL);
+        painelControles.add(chkModoRB);
         painelControles.add(btnInserir);
         painelControles.add(new JSeparator(JSeparator.VERTICAL));
         painelControles.add(btnSalvar);
@@ -78,7 +78,7 @@ public class Main extends JFrame {
         painelControles.add(btnResetar);
         painelControles.add(btnInverter);
         painelControles.add(btnCaminhos);
-        painelControles.add(btnExemplosAVL);
+        painelControles.add(btnExemplosRB);
         painelControles.add(new JSeparator(JSeparator.VERTICAL));
         painelControles.add(lblContador);
         painelControles.add(lblAltura);
@@ -223,18 +223,17 @@ public class Main extends JFrame {
             }
         });
 
-        btnExemplosAVL.addActionListener(new ActionListener() {
+        btnExemplosRB.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String[] opcoes = {
-                    "Rotação Simples à Esquerda (inserir 10, 20, 30)",
-                    "Rotação Simples à Direita (inserir 30, 20, 10)",
-                    "Rotação Dupla à Esquerda (inserir 10, 30, 20)",
-                    "Rotação Dupla à Direita (inserir 30, 10, 20)"
+                    "Caso 1: Tio Vermelho (Recoloração)",
+                    "Caso 2/3: Rotação Simples (LL/RR)",
+                    "Caso 2/3: Rotação Dupla (LR/RL)"
                 };
                 String escolha = (String) JOptionPane.showInputDialog(Main.this,
-                    "Escolha o exemplo de rotação AVL para carregar automaticamente:",
-                    "Exemplos AVL",
+                    "Escolha o exemplo de balanceamento Red-Black:",
+                    "Exemplos Red-Black",
                     JOptionPane.QUESTION_MESSAGE,
                     null,
                     opcoes,
@@ -242,26 +241,24 @@ public class Main extends JFrame {
 
                 if (escolha != null) {
                     arvore.resetar();
-                    chkModoAVL.setSelected(true);
+                    chkModoRB.setSelected(true);
                     long[] valores;
-                    if (escolha.contains("Simples à Esquerda")) {
-                        valores = new long[]{10, 20, 30};
-                    } else if (escolha.contains("Simples à Direita")) {
-                        valores = new long[]{30, 20, 10};
-                    } else if (escolha.contains("Dupla à Esquerda")) {
-                        valores = new long[]{10, 30, 20};
+                    if (escolha.contains("Caso 1")) {
+                        valores = new long[]{10, 20, 30, 40}; // Provoca Caso 1
+                    } else if (escolha.contains("Simples")) {
+                        valores = new long[]{30, 20, 10}; // Provoca Rotação
                     } else {
-                        valores = new long[]{30, 10, 20};
+                        valores = new long[]{10, 30, 20}; // Provoca Rotação Dupla
                     }
 
-                    Tree.RelatorioAVL ultimoRelatorio = null;
+                    Tree.RelatorioRB ultimoRelatorio = null;
                     for (long v : valores) {
-                        ultimoRelatorio = arvore.inserirAVL(v);
+                        ultimoRelatorio = arvore.inserirRB(v);
                     }
                     atualizarUI();
 
-                    if (ultimoRelatorio != null && ultimoRelatorio.teveRotacao) {
-                        exibirPopupRotacao(ultimoRelatorio);
+                    if (ultimoRelatorio != null && ultimoRelatorio.teveBalanceamento) {
+                        exibirPopupRB(ultimoRelatorio);
                     }
                 }
             }
@@ -278,14 +275,14 @@ public class Main extends JFrame {
     private void inserirNumero() {
         try {
             long valor = Long.parseLong(campoEntrada.getText());
-            if (chkModoAVL.isSelected()) {
-                Tree.RelatorioAVL relatorio = arvore.inserirAVL(valor);
+            if (chkModoRB.isSelected()) {
+                Tree.RelatorioRB relatorio = arvore.inserirRB(valor);
                 campoEntrada.setText("");
                 campoEntrada.requestFocus();
                 atualizarUI();
                 autoSave();
-                if (relatorio.teveRotacao) {
-                    exibirPopupRotacao(relatorio);
+                if (relatorio.teveBalanceamento) {
+                    exibirPopupRB(relatorio);
                 }
             } else {
                 arvore.inserir(valor);
@@ -301,10 +298,9 @@ public class Main extends JFrame {
         }
     }
 
-    private void exibirPopupRotacao(Tree.RelatorioAVL relatorio) {
+    private void exibirPopupRB(Tree.RelatorioRB relatorio) {
         StringBuilder sb = new StringBuilder();
-        sb.append("Tipo de Rotação Aplicada:\n").append(relatorio.tipoRotacao).append("\n\n");
-        sb.append("Nó Pivô do Desbalanceamento:\n").append(relatorio.pivo).append("\n\n");
+        sb.append("Balanceamento Red-Black Aplicado!\n\n");
         sb.append("Passo a Passo da Inserção e Balanceamento:\n");
         for (String passo : relatorio.passos) {
             sb.append(" • ").append(passo).append("\n");
@@ -318,18 +314,18 @@ public class Main extends JFrame {
 
         JScrollPane scrollPane = new JScrollPane(textArea);
         scrollPane.setPreferredSize(new Dimension(550, 250));
-        scrollPane.setBorder(BorderFactory.createTitledBorder("Relatório de Execução AVL"));
+        scrollPane.setBorder(BorderFactory.createTitledBorder("Relatório de Execução Red-Black"));
 
         JButton btnSalvarTxt = new JButton("Salvar em TXT");
         btnSalvarTxt.addActionListener(e -> {
             JFileChooser fc = new JFileChooser();
-            fc.setDialogTitle("Salvar Rotação AVL");
-            fc.setSelectedFile(new java.io.File("rotacao_avl_pivo_" + relatorio.pivo + ".txt"));
+            fc.setDialogTitle("Salvar Relatório RB");
+            fc.setSelectedFile(new java.io.File("relatorio_rb_" + System.currentTimeMillis() + ".txt"));
             if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
                 try (java.io.FileWriter fw = new java.io.FileWriter(fc.getSelectedFile())) {
                     fw.write(sb.toString());
                     fw.flush();
-                    JOptionPane.showMessageDialog(this, "Relatório da rotação salvo com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Relatório salvo com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(this, "Erro ao salvar: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
                 }
@@ -343,7 +339,7 @@ public class Main extends JFrame {
         painelConteudo.add(scrollPane, BorderLayout.CENTER);
         painelConteudo.add(painelBotoes, BorderLayout.SOUTH);
 
-        JOptionPane.showMessageDialog(this, painelConteudo, "Balanceamento AVL Executado", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(this, painelConteudo, "Balanceamento Red-Black Executado", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void salvarArvore() {
@@ -495,6 +491,7 @@ public class Main extends JFrame {
         if (no == null) return null;
         No novo = new No();
         novo.item = no.item;
+        novo.isRed = no.isRed;
         novo.esq = cloneNo(no.esq);
         novo.dir = cloneNo(no.dir);
         return novo;
