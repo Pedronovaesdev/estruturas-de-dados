@@ -158,10 +158,14 @@ public class PainelDesenho extends JPanel {
             desenharNo(g, no.dir, x + espacoX, y + espacoY, Math.max(20, espacoX / 2), espacoY, raio, nivel + 1);
         }
 
-        if (no.isRed) {
-            g.setColor(new Color(255, 100, 100)); // Vermelho
+        if (arvore.getType() == TreeType.RED_BLACK) {
+            if (no.isRed) {
+                g.setColor(new Color(255, 100, 100)); // Vermelho
+            } else {
+                g.setColor(new Color(50, 50, 50)); // Preto/Cinza escuro
+            }
         } else {
-            g.setColor(new Color(50, 50, 50)); // Preto/Cinza escuro
+            g.setColor(new Color(135, 206, 250)); // Azul padrão para BST/AVL
         }
         g.fillOval(x - raio, y - raio, 2 * raio, 2 * raio);
         g.setColor(Color.BLACK);
@@ -172,10 +176,10 @@ public class PainelDesenho extends JPanel {
         int textoX = x - (fm.stringWidth(texto) / 2);
         int textoY = y + (fm.getAscent() / 2) - 2;
         
-        if (no.isRed) {
-            g.setColor(Color.BLACK);
-        } else {
+        if (arvore.getType() == TreeType.RED_BLACK && !no.isRed) {
             g.setColor(Color.WHITE);
+        } else {
+            g.setColor(Color.BLACK);
         }
         g.drawString(texto, textoX, textoY);
 

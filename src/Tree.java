@@ -247,6 +247,7 @@ public class Tree {
 
         int fator = altura(no.esq) - altura(no.dir);
         if (fator > 1) {
+            relatorio.teveBalanceamento = true;
             if (altura(no.esq.esq) >= altura(no.esq.dir)) {
                 relatorio.passos.add("Rotação Simples Direita no " + no.item);
                 return rotacaoDireitaAVL(no);
@@ -257,6 +258,7 @@ public class Tree {
             }
         }
         if (fator < -1) {
+            relatorio.teveBalanceamento = true;
             if (altura(no.dir.dir) >= altura(no.dir.esq)) {
                 relatorio.passos.add("Rotação Simples Esquerda no " + no.item);
                 return rotacaoEsquerdaAVL(no);

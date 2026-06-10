@@ -122,7 +122,7 @@ public class Main extends JFrame {
             campoEntrada.requestFocus();
             atualizarUI();
             autoSave();
-            if (arvore.getType() != TreeType.BST && !relatorio.passos.isEmpty()) {
+            if (arvore.getType() != TreeType.BST && relatorio.teveBalanceamento) {
                 exibirPopupRelatorio(relatorio);
             }
         } catch (NumberFormatException ex) {
