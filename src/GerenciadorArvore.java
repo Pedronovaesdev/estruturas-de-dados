@@ -46,7 +46,7 @@ public class GerenciadorArvore {
             Tree novaArvore = carregarArvore(caminho);
             if (novaArvore != null) {
                 JOptionPane.showMessageDialog(parent,
-                        "Árvore carregada com sucesso!\nNós carregados: " + novaArvore.getCount(), "Sucesso",
+                        "Árvore carregada com sucesso!\nTipo: " + novaArvore.getType() + "\nNós carregados: " + novaArvore.getCount(), "Sucesso",
                         JOptionPane.INFORMATION_MESSAGE);
                 return novaArvore;
             }
@@ -105,6 +105,7 @@ public class GerenciadorArvore {
             json.append("{\n");
             json.append("  \"nome\": \"").append(nome).append("\",\n");
             json.append("  \"ordem\": ").append(ordem).append(",\n");
+            json.append("  \"tipo\": \"").append(arvore.getType().name()).append("\",\n");
             json.append("  \"arvore\": ");
             noToJson(arvore.getRoot(), json, 2);
             json.append("\n}");
@@ -141,6 +142,21 @@ public class GerenciadorArvore {
             String json = lerArquivoComoString(caminhoArquivo).trim();
             Tree arvore = new Tree();
             
+            // Tenta ler o tipo
+            int tipoStart = json.indexOf("\"tipo\":");
+            if (tipoStart != -1) {
+                int startQuote = json.indexOf("\"", tipoStart + 7);
+                int endQuote = json.indexOf("\"", startQuote + 1);
+                if (startQuote != -1 && endQuote != -1) {
+                    String tipoStr = json.substring(startQuote + 1, endQuote);
+                    try {
+                        arvore.setType(TreeType.valueOf(tipoStr));
+                    } catch (IllegalArgumentException e) {
+                        System.err.println("Tipo de árvore desconhecido: " + tipoStr);
+                    }
+                }
+            }
+
             int arvoreStart = json.indexOf("\"arvore\":");
             if (arvoreStart == -1) return arvore;
             
@@ -220,7 +236,6 @@ public class GerenciadorArvore {
                 return arvore;
             }
 
-            // Se o arquivo começar com '{', provavelmente é um JSON mesmo sem a extensão .json
             if (texto.startsWith("{")) {
                 return carregarArvoreJson(caminhoArquivo);
             }

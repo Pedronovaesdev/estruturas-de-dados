@@ -11,9 +11,8 @@ public class Main extends JFrame {
     private JLabel lblContador;
     private JLabel lblAltura;
     private JButton btnTipoArvore;
-    private JCheckBox chkModoRB;
+    private JComboBox<TreeType> comboTipoArvore;
 
-    // Variáveis para histórico e auto-save
     private java.util.List<String> historicoArquivos = new java.util.ArrayList<>();
     private int indiceHistorico = -1;
     private int proximaOrdem = 0;
@@ -23,8 +22,8 @@ public class Main extends JFrame {
     public Main() {
         arvore = new Tree();
 
-        setTitle("Árvore Binária de Busca");
-        setSize(1000, 700);
+        setTitle("Estruturas de Dados - Simulador de Árvores");
+        setSize(1200, 750);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
@@ -33,7 +32,17 @@ public class Main extends JFrame {
         painelControles.setBackground(Color.LIGHT_GRAY);
 
         campoEntrada = new JTextField(10);
+        painelControles.add(new JLabel("Valor:"));
         painelControles.add(campoEntrada);
+
+        comboTipoArvore = new JComboBox<>(TreeType.values());
+        comboTipoArvore.setSelectedItem(TreeType.BST);
+        comboTipoArvore.addActionListener(e -> {
+            arvore.setType((TreeType) comboTipoArvore.getSelectedItem());
+            atualizarUI();
+        });
+        painelControles.add(new JLabel("Tipo:"));
+        painelControles.add(comboTipoArvore);
 
         JButton btnInserir = new JButton("Inserir");
         JButton btnSalvar = new JButton("Salvar");
@@ -42,7 +51,7 @@ public class Main extends JFrame {
         JButton btnResetar = new JButton("Resetar");
         JButton btnInverter = new JButton("Inverter");
         JButton btnCaminhos = new JButton("Caminhos");
-        JButton btnExemplosRB = new JButton("Exemplos Red-Black");
+        JButton btnExemplos = new JButton("Exemplos");
         JButton btnPercursos = new JButton("Percursos");
         JButton btnAnalise = new JButton("Análise");
         JButton btnSair = new JButton("Sair");
@@ -52,24 +61,16 @@ public class Main extends JFrame {
         btnAnterior.setEnabled(false);
         btnProximo.setEnabled(false);
 
-        chkModoRB = new JCheckBox("Modo Red-Black", true);
-        chkModoRB.setBackground(Color.LIGHT_GRAY);
-        chkModoRB.setFont(new Font("Arial", Font.BOLD, 12));
-
         lblContador = new JLabel("Nós: 0");
         lblContador.setFont(new Font("Arial", Font.BOLD, 12));
-
         lblAltura = new JLabel("Altura: -1");
         lblAltura.setFont(new Font("Arial", Font.BOLD, 12));
 
-        btnTipoArvore = new JButton("Tipo: Vazia");
-        btnTipoArvore.setFont(new Font("Arial", Font.BOLD, 12));
-        btnTipoArvore.setFocusable(false);
+        btnTipoArvore = new JButton("Info");
         btnTipoArvore.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this, arvore.getTiposArvore(), "Tipo da Árvore", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, arvore.getTiposArvore(), "Propriedades da Árvore", JOptionPane.INFORMATION_MESSAGE);
         });
 
-        painelControles.add(chkModoRB);
         painelControles.add(btnInserir);
         painelControles.add(new JSeparator(JSeparator.VERTICAL));
         painelControles.add(btnSalvar);
@@ -78,7 +79,7 @@ public class Main extends JFrame {
         painelControles.add(btnResetar);
         painelControles.add(btnInverter);
         painelControles.add(btnCaminhos);
-        painelControles.add(btnExemplosRB);
+        painelControles.add(btnExemplos);
         painelControles.add(new JSeparator(JSeparator.VERTICAL));
         painelControles.add(lblContador);
         painelControles.add(lblAltura);
@@ -97,361 +98,131 @@ public class Main extends JFrame {
         add(painelControles, BorderLayout.NORTH);
         add(painelArvore, BorderLayout.CENTER);
 
-        btnInserir.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                inserirNumero();
-            }
-        });
-
-        campoEntrada.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                inserirNumero();
-            }
-        });
-
-        btnSalvar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                salvarArvore();
-            }
-        });
-
-        btnCarregar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                carregarArvore();
-            }
-        });
-
-        btnResetar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                resetarArvore();
-            }
-        });
-
-        btnInverter.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                inverterArvore();
-            }
-        });
-
-        btnCaminhos.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                mostrarCaminhos();
-            }
-        });
-
-        btnSair.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("Saindo do programa");
-                System.exit(0);
-            }
-        });
-
+        btnInserir.addActionListener(e -> inserirNumero());
+        campoEntrada.addActionListener(e -> inserirNumero());
+        btnSalvar.addActionListener(e -> GerenciadorArvore.iniciarDialogoSalvar(this, arvore, proximaOrdem++));
+        btnSalvarRelatorio.addActionListener(e -> GerenciadorArvore.salvarRelatorioPassos(this, arvore));
+        btnCarregar.addActionListener(e -> carregarArvore());
+        btnResetar.addActionListener(e -> resetarArvore());
+        btnInverter.addActionListener(e -> inverterArvore());
+        btnCaminhos.addActionListener(e -> mostrarCaminhos());
+        btnSair.addActionListener(e -> System.exit(0));
         btnAnterior.addActionListener(e -> navegarHistorico(-1));
         btnProximo.addActionListener(e -> navegarHistorico(1));
-
-        btnPercursos.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String[] opcoes = {"NLR (Pré-Ordem)", "LNR (Em Ordem)", "LRN (Pós-Ordem)"};
-                String escolha = (String) JOptionPane.showInputDialog(Main.this, 
-                    "Escolha o tipo de percurso:", 
-                    "Percursos", 
-                    JOptionPane.QUESTION_MESSAGE, 
-                    null, 
-                    opcoes, 
-                    opcoes[0]);
-
-                if (escolha != null) {
-                    String ordem = escolha.substring(0, 3); // Extrai NLR, LNR ou LRN
-
-                    // Trata o caso de árvore vazia antes de realizar o percurso
-                    if (arvore == null || arvore.getRoot() == null) {
-                        JOptionPane.showMessageDialog(
-                            Main.this,
-                            "Árvore vazia. Adicione elementos antes de realizar percursos.",
-                            "Árvore vazia",
-                            JOptionPane.WARNING_MESSAGE
-                        );
-                        return;
-                    }
-                    java.util.List<Long> resultado = arvore.buscarPorPercurso(ordem);
-                    StringBuilder sb = new StringBuilder("Resultado do percurso " + ordem + ":\n\n");
-                    for (Long valor : resultado) {
-                        sb.append(valor).append("\n");
-                    }
-
-                    JTextArea textArea = new JTextArea(sb.toString());
-                    textArea.setEditable(false);
-                    textArea.setOpaque(false);
-                    JScrollPane scrollPane = new JScrollPane(textArea);
-                    scrollPane.setPreferredSize(new Dimension(300, 200));
-
-                    JButton btnCopiar = new JButton("Copiar");
-                    btnCopiar.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            StringSelection selecao = new StringSelection(textArea.getText());
-                            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selecao, null);
-                            JOptionPane.showMessageDialog(Main.this, "Resultado copiado para a área de transferência.", "Copiado", JOptionPane.INFORMATION_MESSAGE);
-                        }
-                    });
-
-                    JPanel painelResultado = new JPanel(new BorderLayout(0, 8));
-                    painelResultado.add(scrollPane, BorderLayout.CENTER);
-
-                    JPanel painelBotao = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-                    painelBotao.add(btnCopiar);
-                    painelResultado.add(painelBotao, BorderLayout.SOUTH);
-
-                    JOptionPane.showMessageDialog(Main.this, painelResultado, "Resultado do Percurso", JOptionPane.INFORMATION_MESSAGE);
-                }
-            }
-        });
-
-        btnAnalise.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                mostrarAnaliseCompleta();
-            }
-        });
-
-        btnExemplosRB.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String[] opcoes = {
-                    "Caso 1: Tio Vermelho (Recoloração)",
-                    "Caso 2/3: Rotação Simples (LL/RR)",
-                    "Caso 2/3: Rotação Dupla (LR/RL)"
-                };
-                String escolha = (String) JOptionPane.showInputDialog(Main.this,
-                    "Escolha o exemplo de balanceamento Red-Black:",
-                    "Exemplos Red-Black",
-                    JOptionPane.QUESTION_MESSAGE,
-                    null,
-                    opcoes,
-                    opcoes[0]);
-
-                if (escolha != null) {
-                    arvore.resetar();
-                    chkModoRB.setSelected(true);
-                    long[] valores;
-                    if (escolha.contains("Caso 1")) {
-                        valores = new long[]{10, 20, 30, 40}; // Provoca Caso 1
-                    } else if (escolha.contains("Simples")) {
-                        valores = new long[]{30, 20, 10}; // Provoca Rotação
-                    } else {
-                        valores = new long[]{10, 30, 20}; // Provoca Rotação Dupla
-                    }
-
-                    Tree.RelatorioRB ultimoRelatorio = null;
-                    for (long v : valores) {
-                        ultimoRelatorio = arvore.inserirRB(v);
-                    }
-                    atualizarUI();
-
-                    if (ultimoRelatorio != null && ultimoRelatorio.teveBalanceamento) {
-                        exibirPopupRB(ultimoRelatorio);
-                    }
-                }
-            }
-        });
-
-        btnSalvarRelatorio.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                salvarRelatorioPassos();
-            }
-        });
+        btnPercursos.addActionListener(e -> mostrarPercursos());
+        btnAnalise.addActionListener(e -> mostrarAnaliseCompleta());
+        btnExemplos.addActionListener(e -> mostrarExemplos());
     }
 
     private void inserirNumero() {
         try {
             long valor = Long.parseLong(campoEntrada.getText());
-            if (chkModoRB.isSelected()) {
-                Tree.RelatorioRB relatorio = arvore.inserirRB(valor);
-                campoEntrada.setText("");
-                campoEntrada.requestFocus();
-                atualizarUI();
-                autoSave();
-                if (relatorio.teveBalanceamento) {
-                    exibirPopupRB(relatorio);
-                }
-            } else {
-                arvore.inserir(valor);
-                campoEntrada.setText("");
-                campoEntrada.requestFocus();
-                atualizarUI();
-                autoSave();
+            Tree.RelatorioRB relatorio = arvore.inserirComLogica(valor);
+            campoEntrada.setText("");
+            campoEntrada.requestFocus();
+            atualizarUI();
+            autoSave();
+            if (arvore.getType() != TreeType.BST && !relatorio.passos.isEmpty()) {
+                exibirPopupRelatorio(relatorio);
             }
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Por favor, digite um número válido!", "Erro",
-                    JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Por favor, digite um número válido!", "Erro", JOptionPane.ERROR_MESSAGE);
             campoEntrada.setText("");
         }
     }
 
-    private void exibirPopupRB(Tree.RelatorioRB relatorio) {
+    private void exibirPopupRelatorio(Tree.RelatorioRB relatorio) {
         StringBuilder sb = new StringBuilder();
-        sb.append("Balanceamento Red-Black Aplicado!\n\n");
-        sb.append("Passo a Passo da Inserção e Balanceamento:\n");
+        sb.append("Ação executada na árvore ").append(arvore.getType()).append(":\n\n");
         for (String passo : relatorio.passos) {
             sb.append(" • ").append(passo).append("\n");
         }
-
         JTextArea textArea = new JTextArea(sb.toString());
         textArea.setEditable(false);
-        textArea.setOpaque(false);
-        textArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
-        textArea.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-
         JScrollPane scrollPane = new JScrollPane(textArea);
-        scrollPane.setPreferredSize(new Dimension(550, 250));
-        scrollPane.setBorder(BorderFactory.createTitledBorder("Relatório de Execução Red-Black"));
-
-        JButton btnSalvarTxt = new JButton("Salvar em TXT");
-        btnSalvarTxt.addActionListener(e -> {
-            JFileChooser fc = new JFileChooser();
-            fc.setDialogTitle("Salvar Relatório RB");
-            fc.setSelectedFile(new java.io.File("relatorio_rb_" + System.currentTimeMillis() + ".txt"));
-            if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-                try (java.io.FileWriter fw = new java.io.FileWriter(fc.getSelectedFile())) {
-                    fw.write(sb.toString());
-                    fw.flush();
-                    JOptionPane.showMessageDialog(this, "Relatório salvo com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(this, "Erro ao salvar: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        });
-
-        JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        painelBotoes.add(btnSalvarTxt);
-
-        JPanel painelConteudo = new JPanel(new BorderLayout());
-        painelConteudo.add(scrollPane, BorderLayout.CENTER);
-        painelConteudo.add(painelBotoes, BorderLayout.SOUTH);
-
-        JOptionPane.showMessageDialog(this, painelConteudo, "Balanceamento Red-Black Executado", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    private void salvarArvore() {
-        GerenciadorArvore.iniciarDialogoSalvar(this, arvore, proximaOrdem++);
-    }
-
-    private void salvarRelatorioPassos() {
-        GerenciadorArvore.salvarRelatorioPassos(this, arvore);
+        scrollPane.setPreferredSize(new Dimension(400, 200));
+        JOptionPane.showMessageDialog(this, scrollPane, "Relatório de Operação", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void carregarArvore() {
         Tree novaArvore = GerenciadorArvore.iniciarDialogoCarregar(this);
         if (novaArvore != null) {
             arvore = novaArvore;
+            comboTipoArvore.setSelectedItem(arvore.getType());
             painelArvore.setArvore(arvore);
-            painelArvore.ajustarParaCaberNaTela();
             atualizarUI();
             autoSave();
         }
     }
 
     private void resetarArvore() {
-        int resposta = JOptionPane.showConfirmDialog(this,
-                "Deseja realmente resetar a árvore?\nIsso limpará todos os nós!",
-                "Confirmar Reset",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE);
-
-        if (resposta == JOptionPane.YES_OPTION) {
+        if (JOptionPane.showConfirmDialog(this, "Resetar árvore?", "Confirmar", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
             arvore.resetar();
-            painelArvore.ajustarParaCaberNaTela();
             atualizarUI();
             autoSave();
-            JOptionPane.showMessageDialog(this, "Árvore resetada com sucesso!", "Sucesso",
-                    JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
     private void inverterArvore() {
-        if (arvore.getRoot() == null) {
-            JOptionPane.showMessageDialog(this, "A árvore está vazia!", "Inverter Árvore", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-
         arvore.inverter();
-        painelArvore.ajustarParaCaberNaTela();
         atualizarUI();
     }
 
     private void mostrarCaminhos() {
-        if (arvore.getRoot() == null) {
-            JOptionPane.showMessageDialog(this, "A árvore está vazia!", "Caminhos", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-
         java.util.List<String> caminhos = arvore.getCaminhos();
-        StringBuilder sb = new StringBuilder("Caminhos da Raiz até as Folhas:\n\n");
-        for (String c : caminhos) {
-            sb.append(c).append("\n");
+        StringBuilder sb = new StringBuilder("Caminhos:\n");
+        for (String c : caminhos) sb.append(c).append("\n");
+        JOptionPane.showMessageDialog(this, new JScrollPane(new JTextArea(sb.toString())), "Caminhos", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void mostrarPercursos() {
+        String[] opcoes = {"NLR (Pré-Ordem)", "LNR (Em Ordem)", "LRN (Pós-Ordem)"};
+        String escolha = (String) JOptionPane.showInputDialog(this, "Percurso:", "Selecionar", JOptionPane.QUESTION_MESSAGE, null, opcoes, opcoes[0]);
+        if (escolha != null) {
+            java.util.List<Long> res = arvore.buscarPorPercurso(escolha.substring(0, 3));
+            JOptionPane.showMessageDialog(this, res.toString(), "Resultado " + escolha, JOptionPane.INFORMATION_MESSAGE);
         }
+    }
 
-        JTextArea textArea = new JTextArea(sb.toString());
-        textArea.setEditable(false);
-        textArea.setOpaque(false);
-        JScrollPane scrollPane = new JScrollPane(textArea);
-        scrollPane.setPreferredSize(new Dimension(300, 200));
-
-        JOptionPane.showMessageDialog(this, scrollPane, "Caminhos da Árvore", JOptionPane.INFORMATION_MESSAGE);
+    private void mostrarExemplos() {
+        String[] opcoes = {"BST: Degenerada", "AVL: Rotação Simples", "AVL: Rotação Dupla", "RB: Caso 1 (Recoloração)", "RB: Caso 2/3 (Rotação)"};
+        String escolha = (String) JOptionPane.showInputDialog(this, "Exemplos:", "Selecionar", JOptionPane.QUESTION_MESSAGE, null, opcoes, opcoes[0]);
+        if (escolha != null) {
+            arvore.resetar();
+            long[] valores;
+            if (escolha.startsWith("BST")) {
+                arvore.setType(TreeType.BST);
+                valores = new long[]{10, 20, 30, 40, 50};
+            } else if (escolha.contains("Simples")) {
+                arvore.setType(TreeType.AVL);
+                valores = new long[]{30, 20, 10};
+            } else if (escolha.contains("Dupla")) {
+                arvore.setType(TreeType.AVL);
+                valores = new long[]{30, 10, 20};
+            } else if (escolha.contains("Caso 1")) {
+                arvore.setType(TreeType.RED_BLACK);
+                valores = new long[]{10, 20, 30, 40};
+            } else {
+                arvore.setType(TreeType.RED_BLACK);
+                valores = new long[]{30, 20, 10};
+            }
+            comboTipoArvore.setSelectedItem(arvore.getType());
+            for (long v : valores) arvore.inserirComLogica(v);
+            atualizarUI();
+        }
     }
 
     private void atualizarUI() {
         lblContador.setText("Nós: " + arvore.getCount());
         lblAltura.setText("Altura: " + arvore.getAltura());
-        btnTipoArvore.setText("Tipo: " + arvore.getTiposArvore());
         painelArvore.repaint();
         painelArvore.ajustarParaCaberNaTela();
-    }
-
-    private void mostrarAnaliseCompleta() {
-        if (arvore.getRoot() == null) {
-            JOptionPane.showMessageDialog(this, "A árvore está vazia!", "Análise Completa", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("===== ANÁLISE COMPLETA DA ÁRVORE =====\n\n");
-
-        // Informações gerais da árvore
-        sb.append("INFORMAÇÕES GERAIS DA ÁRVORE:\n");
-        sb.append("   • Profundidade da Árvore: ").append(arvore.getProfundidadeArvore()).append("\n");
-        sb.append("   • Altura da Árvore: ").append(arvore.getAltura()).append("\n");
-        sb.append("   • Nível da Árvore: ").append(arvore.getNivelArvore()).append("\n");
-        sb.append("   • Total de Nós: ").append(arvore.getCount()).append("\n");
-
-        // Criar a interface com JTextArea
-        JTextArea textArea = new JTextArea(sb.toString());
-        textArea.setEditable(false);
-        textArea.setOpaque(false);
-        textArea.setFont(new Font("Monospaced", Font.PLAIN, 11));
-        JScrollPane scrollPane = new JScrollPane(textArea);
-        scrollPane.setPreferredSize(new Dimension(500, 300));
-
-        JOptionPane.showMessageDialog(this, scrollPane, "Análise Completa da Árvore", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void autoSave() {
         String filename = "src/salvar_arvore/history/arvore_step_" + proximaOrdem + ".json";
         if (GerenciadorArvore.salvarArvoreJson(arvore, filename, "AutoSave_" + proximaOrdem, proximaOrdem)) {
-            // Se salvamos um novo estado, invalidamos o histórico à frente
-            while (historicoArquivos.size() > indiceHistorico + 1) {
-                historicoArquivos.remove(historicoArquivos.size() - 1);
-            }
+            while (historicoArquivos.size() > indiceHistorico + 1) historicoArquivos.remove(historicoArquivos.size() - 1);
             historicoArquivos.add(filename);
             indiceHistorico++;
             proximaOrdem++;
@@ -462,11 +233,11 @@ public class Main extends JFrame {
     private void navegarHistorico(int direcao) {
         int novoIndice = indiceHistorico + direcao;
         if (novoIndice >= 0 && novoIndice < historicoArquivos.size()) {
-            String caminho = historicoArquivos.get(novoIndice);
-            Tree novaArvore = GerenciadorArvore.carregarArvoreJson(caminho);
-            if (novaArvore != null) {
-                arvore = novaArvore;
+            Tree nova = GerenciadorArvore.carregarArvoreJson(historicoArquivos.get(novoIndice));
+            if (nova != null) {
+                arvore = nova;
                 indiceHistorico = novoIndice;
+                comboTipoArvore.setSelectedItem(arvore.getType());
                 painelArvore.setArvore(arvore);
                 atualizarUI();
                 atualizarBotoesHistorico();
@@ -479,27 +250,15 @@ public class Main extends JFrame {
         btnProximo.setEnabled(indiceHistorico < historicoArquivos.size() - 1);
     }
 
-    private Tree cloneArvore(Tree arvore) {
-        Tree novaArvore = new Tree();
-        if (arvore.getRoot() != null) {
-            novaArvore.setRoot(cloneNo(arvore.getRoot()));
-        }
-        return novaArvore;
-    }
-
-    private No cloneNo(No no) {
-        if (no == null) return null;
-        No novo = new No();
-        novo.item = no.item;
-        novo.isRed = no.isRed;
-        novo.esq = cloneNo(no.esq);
-        novo.dir = cloneNo(no.dir);
-        return novo;
+    private void mostrarAnaliseCompleta() {
+        StringBuilder sb = new StringBuilder("Análise:\n");
+        sb.append("Tipo: ").append(arvore.getType()).append("\n");
+        sb.append("Altura: ").append(arvore.getAltura()).append("\n");
+        sb.append("Nós: ").append(arvore.getCount()).append("\n");
+        JOptionPane.showMessageDialog(this, sb.toString());
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            new Main().setVisible(true);
-        });
+        SwingUtilities.invokeLater(() -> new Main().setVisible(true));
     }
 }
