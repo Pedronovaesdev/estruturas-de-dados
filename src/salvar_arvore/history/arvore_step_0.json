@@ -1,0 +1,11 @@
+{
+  "nome": "AutoSave_0",
+  "ordem": 0,
+  "tipo": "BST",
+  "arvore": {
+    "item": 10,
+    "isRed": false,
+    "esq": null,
+    "dir": null
+  }
+}
